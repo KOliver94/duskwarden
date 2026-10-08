@@ -8,6 +8,10 @@ import type { StepInput } from './types'
 const s = makeSetup(['killer', 'doctor', 'villager', 'villager'])
 const d = (inputs: Record<string, StepInput>, phase: number) => deriveGame(s, inputs, phase)
 const at = (phase: number, stepId: string) => ({ phase, stepId })
+const votes = (playerId: string, n: number): StepInput => ({
+  kind: 'votes',
+  nominations: [{ playerId, votes: n }],
+})
 
 describe('next', () => {
   it('requires a choice on a living role step', () => {
@@ -39,9 +43,18 @@ describe('next', () => {
     expect(next(derived, at(1, 'd1:morning'))).toMatchObject({ ok: true, win: 'killers' })
   })
 
-  it('reports the win when leaving the execution', () => {
-    const derived = d({ 'd1:execution': { kind: 'execution', targetId: 'p1' } }, 1)
-    expect(next(derived, at(1, 'd1:execution'))).toEqual({
+  it('lets the vote proceed without nominations', () => {
+    expect(next(d({}, 1), at(1, 'd1:voting'))).toEqual({
+      ok: true,
+      cursor: at(1, 'd1:verdict'),
+      closesPhase: null,
+      win: null,
+    })
+  })
+
+  it('reports the win when leaving the verdict', () => {
+    const derived = d({ 'd1:voting': votes('p1', 3) }, 1)
+    expect(next(derived, at(1, 'd1:verdict'))).toEqual({
       ok: true,
       cursor: at(2, 'n2:dusk'),
       closesPhase: 1,
@@ -49,12 +62,9 @@ describe('next', () => {
     })
   })
 
-  it('blocks Next on an invalidated step', () => {
-    const inputs: Record<string, StepInput> = {
-      'n1:killer': t('p3'),
-      'd1:execution': { kind: 'execution', targetId: 'p3' },
-    }
-    expect(next(d(inputs, 1), at(1, 'd1:execution'))).toEqual({ ok: false })
+  it('blocks Next on a night action invalidated by an earlier edit', () => {
+    const inputs: Record<string, StepInput> = { 'n1:killer': t('p3'), 'n2:doctor': t('p3') }
+    expect(next(d(inputs, 2), at(2, 'n2:doctor'))).toEqual({ ok: false })
   })
 })
 
@@ -92,20 +102,18 @@ describe('pendingWin', () => {
 })
 
 describe('aliveAt', () => {
-  const inputs: Record<string, StepInput> = {
-    'n1:killer': t('p3'),
-    'd1:execution': { kind: 'execution', targetId: 'p4' },
-  }
+  // p3 dies in night 1, so 3 players vote and 2 votes are a majority
+  const inputs: Record<string, StepInput> = { 'n1:killer': t('p3'), 'd1:voting': votes('p4', 2) }
 
   it('keeps night deaths hidden during the night', () => {
-    expect(aliveAt(d(inputs, 0), at(0, 'n1:doctor'), false)).toEqual(['p1', 'p2', 'p3', 'p4'])
+    expect(aliveAt(d(inputs, 0), at(0, 'n1:doctor'))).toEqual(['p1', 'p2', 'p3', 'p4'])
   })
 
-  it('uses the morning state during the day', () => {
-    expect(aliveAt(d(inputs, 1), at(1, 'd1:execution'), false)).toEqual(['p1', 'p2', 'p4'])
+  it('uses the morning state while the town votes', () => {
+    expect(aliveAt(d(inputs, 1), at(1, 'd1:voting'))).toEqual(['p1', 'p2', 'p4'])
   })
 
-  it('applies the execution once the game ended on it', () => {
-    expect(aliveAt(d(inputs, 1), at(1, 'd1:execution'), true)).toEqual(['p1', 'p2'])
+  it('applies the execution from the verdict on', () => {
+    expect(aliveAt(d(inputs, 1), at(1, 'd1:verdict'))).toEqual(['p1', 'p2'])
   })
 })

@@ -6,36 +6,57 @@ import type { StepInput } from './types'
 
 // p1 killer, p2 doctor, p3 detective, p4 villager, p5 villager
 const s = makeSetup(['killer', 'doctor', 'detective', 'villager', 'villager'])
+const at = (phase: number, stepId: string) => ({ phase, stepId })
+
+// p5 dies in night 1; 4 players vote and 3 votes are a majority
 const inputs: Record<string, StepInput> = {
   'n1:killer': t('p5'),
   'n1:doctor': t('p4'),
   'n1:detective': t('p1'),
-  'd1:execution': { kind: 'execution', targetId: 'p1' },
+  'd1:voting': { kind: 'votes', nominations: [{ playerId: 'p1', votes: 3 }] },
 }
-const at = (phase: number, stepId: string) => ({ phase, stepId })
 
 describe('graveyard', () => {
-  it('shows night deaths from the morning but hides a pending execution', () => {
-    expect(graveyard(deriveGame(s, inputs, 1), at(1, 'd1:discussion'), false)).toEqual([
-      { phase: 1, entries: [{ playerId: 'p5', cause: 'night' }] },
+  it('shows night deaths from the morning but hides an execution still being voted on', () => {
+    expect(graveyard(deriveGame(s, inputs, 1), at(1, 'd1:voting'))).toEqual([
+      { phase: 1, entries: [{ playerId: 'p5', cause: 'night', revealed: false }] },
     ])
   })
 
-  it('includes the execution once the day is closed', () => {
-    expect(graveyard(deriveGame(s, inputs, 2), at(2, 'n2:dusk'), false)).toEqual([
+  it('lists the execution once the verdict is reached', () => {
+    expect(graveyard(deriveGame(s, inputs, 1), at(1, 'd1:verdict'))).toEqual([
       {
         phase: 1,
         entries: [
-          { playerId: 'p5', cause: 'night' },
-          { playerId: 'p1', cause: 'execution' },
+          { playerId: 'p5', cause: 'night', revealed: false },
+          { playerId: 'p1', cause: 'execution', revealed: false },
         ],
       },
     ])
   })
 
-  it('includes the execution the game ended on', () => {
-    const days = graveyard(deriveGame(s, inputs, 1), at(1, 'd1:execution'), true)
-    expect(days[0].entries).toContainEqual({ playerId: 'p1', cause: 'execution' })
+  it('shows a role once it is revealed', () => {
+    const revealed = {
+      ...inputs,
+      'd1:morning': { kind: 'morning', adjustments: [], revealed: ['p5'] },
+      'd1:verdict': { kind: 'verdict', revealed: true },
+    } satisfies Record<string, StepInput>
+    expect(graveyard(deriveGame(s, revealed, 1), at(1, 'd1:verdict'))[0].entries).toEqual([
+      { playerId: 'p5', cause: 'night', revealed: true },
+      { playerId: 'p1', cause: 'execution', revealed: true },
+    ])
+  })
+
+  it('drops a reveal once the player is no longer among the deaths', () => {
+    const revived = {
+      ...inputs,
+      'd1:morning': {
+        kind: 'morning',
+        adjustments: [{ playerId: 'p5', dead: false }],
+        revealed: ['p5'],
+      },
+    } satisfies Record<string, StepInput>
+    expect(graveyard(deriveGame(s, revived, 1), at(1, 'd1:discussion'))[0].entries).toEqual([])
   })
 })
 
@@ -57,17 +78,27 @@ describe('narratorLog', () => {
     })
     expect(night.entries.filter((e) => e.kind === 'attack')).toHaveLength(1)
   })
+
+  it('adds nominations while voting and the verdict once reached', () => {
+    const voting = narratorLog(s, deriveGame(s, inputs, 1), at(1, 'd1:voting'), false)[1]
+    expect(voting.entries).toEqual([{ kind: 'nomination', playerId: 'p1', votes: 3 }])
+    const verdict = narratorLog(s, deriveGame(s, inputs, 1), at(1, 'd1:verdict'), false)[1]
+    expect(verdict.entries).toEqual([
+      { kind: 'nomination', playerId: 'p1', votes: 3 },
+      { kind: 'verdict', tally: { outcome: 'executed', playerId: 'p1', votes: 3 } },
+    ])
+  })
 })
 
 describe('chronicle', () => {
-  it('summarises saves and executions', () => {
+  it('summarises saves and executions with their votes', () => {
     const saved: Record<string, StepInput> = { ...inputs, 'n1:killer': t('p4') }
-    expect(chronicle(s, deriveGame(s, saved, 1), at(1, 'd1:execution'))).toEqual([
+    expect(chronicle(s, deriveGame(s, saved, 1), at(1, 'd1:verdict'))).toEqual([
       {
         phase: 0,
         entries: [{ kind: 'saved', playerId: 'p4', by: 'protect', protectorRoleId: 'doctor' }],
       },
-      { phase: 1, entries: [{ kind: 'executed', playerId: 'p1' }] },
+      { phase: 1, entries: [{ kind: 'executed', playerId: 'p1', votes: 3 }] },
     ])
   })
 
@@ -90,17 +121,19 @@ describe('chronicle of an unfinished night', () => {
 })
 
 describe('individualWinners', () => {
+  // p1 killer, p2 jester, p3 survivor, p4 villager; 4 voters, 3 votes needed
+  const n = makeSetup(['killer', 'jester', 'survivor', 'villager'])
+  const jesterVoted: Record<string, StepInput> = {
+    'd1:voting': { kind: 'votes', nominations: [{ playerId: 'p2', votes: 3 }] },
+  }
+
   it('lists executed jesters and living survivors', () => {
-    const n = makeSetup(['killer', 'jester', 'survivor', 'villager'])
-    const d = deriveGame(n, { 'd1:execution': { kind: 'execution', targetId: 'p2' } }, 1)
-    expect(individualWinners(n, d, at(1, 'd1:execution'), ['p1', 'p3', 'p4'])).toEqual(['p2', 'p3'])
+    const d = deriveGame(n, jesterVoted, 1)
+    expect(individualWinners(n, d, at(1, 'd1:verdict'), ['p1', 'p3', 'p4'])).toEqual(['p2', 'p3'])
   })
 
   it('ignores an execution the game never reached', () => {
-    const n = makeSetup(['killer', 'jester', 'survivor', 'villager'])
-    const d = deriveGame(n, { 'd1:execution': { kind: 'execution', targetId: 'p2' } }, 1)
-    expect(individualWinners(n, d, at(1, 'd1:discussion'), ['p1', 'p2', 'p3', 'p4'])).toEqual([
-      'p3',
-    ])
+    const d = deriveGame(n, jesterVoted, 1)
+    expect(individualWinners(n, d, at(1, 'd1:voting'), ['p1', 'p2', 'p3', 'p4'])).toEqual(['p3'])
   })
 })

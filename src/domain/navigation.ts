@@ -13,8 +13,7 @@ export function currentStep(derived: DerivedGame, cursor: Cursor): Step {
   return phase.steps[stepIndex(phase, cursor.stepId)]
 }
 
-export const needsInput = (step: Step) =>
-  step.kind === 'execution' || (step.kind === 'action' && step.actorIds.length > 0)
+export const needsInput = (step: Step) => step.kind === 'action' && step.actorIds.length > 0
 
 export type NextResult =
   { ok: false } | { ok: true; cursor: Cursor; closesPhase: number | null; win: Winner | null }
@@ -27,7 +26,7 @@ export function next(derived: DerivedGame, cursor: Cursor): NextResult {
   const win =
     step.kind === 'morning'
       ? phase.day!.winAfterMorning
-      : step.kind === 'execution'
+      : step.kind === 'verdict'
         ? phase.day!.winAfterExecution
         : null
   if (i < phase.steps.length - 1) {
@@ -61,17 +60,17 @@ export function pendingWin(derived: DerivedGame, cursor: Cursor): Winner | null 
     const phase = derived.phases[p]
     if (!phase.day) continue
     const position = p === cursor.phase ? stepIndex(phase, cursor.stepId) : Infinity
-    const execution = phase.steps.findIndex((s) => s.kind === 'execution')
-    if (position > execution) return phase.day.winAfterExecution
+    const verdict = phase.steps.findIndex((s) => s.kind === 'verdict')
+    if (position > verdict) return phase.day.winAfterExecution
     if (position > 0) return phase.day.winAfterMorning
   }
   return null
 }
 
-export function aliveAt(derived: DerivedGame, cursor: Cursor, ended: boolean): string[] {
+export function aliveAt(derived: DerivedGame, cursor: Cursor): string[] {
   const phase = derived.phases[cursor.phase]
   if (!phase.day) return phase.aliveAtStart
-  return ended && currentStep(derived, cursor).kind === 'execution'
+  return currentStep(derived, cursor).kind === 'verdict'
     ? phase.aliveAtEnd
     : phase.day.aliveAfterMorning
 }

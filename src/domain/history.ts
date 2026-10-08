@@ -3,10 +3,12 @@ import { stepIndex } from './navigation'
 import { isSuspicious } from './roles'
 import { stepId } from './timeline'
 import type { Cursor, GameSetup } from './types'
+import type { Tally } from './vote'
 
 export interface GraveEntry {
   playerId: string
   cause: 'night' | 'execution'
+  revealed: boolean
 }
 
 export interface GraveDay {
@@ -26,7 +28,8 @@ export type LogEntry =
   | { kind: 'vest'; stepId: string; playerId: string; use: boolean }
   | { kind: 'attack'; attack: Attack }
   | { kind: 'adjustment'; playerId: string; dead: boolean }
-  | { kind: 'execution'; targetId: string | null }
+  | { kind: 'nomination'; playerId: string; votes: number }
+  | { kind: 'verdict'; tally: Tally }
 
 export interface LogPhase {
   phase: number
@@ -37,7 +40,7 @@ export type ChronicleEntry =
   | { kind: 'saved'; playerId: string; by: 'protect' | 'vest'; protectorRoleId: string | null }
   | { kind: 'killerKilledKiller'; playerId: string }
   | { kind: 'died'; playerId: string }
-  | { kind: 'executed'; playerId: string }
+  | { kind: 'executed'; playerId: string; votes: number }
   | { kind: 'noExecution' }
 
 export interface ChroniclePhase {
@@ -45,28 +48,35 @@ export interface ChroniclePhase {
   entries: ChronicleEntry[]
 }
 
-function progress(derived: DerivedGame, cursor: Cursor, ended: boolean) {
+function reachedBy(derived: DerivedGame, cursor: Cursor) {
   const position = (phase: number, id: string) =>
     phase * 1000 + stepIndex(derived.phases[phase], id)
   const current = position(cursor.phase, cursor.stepId)
-  return {
-    reached: (phase: number, id: string) => position(phase, id) <= current,
-    passed: (phase: number, id: string) =>
-      position(phase, id) < current || (ended && position(phase, id) === current),
-  }
+  return (phase: number, id: string) => position(phase, id) <= current
 }
 
 const roleOfPlayer = (setup: GameSetup, id: string) =>
   setup.roles[setup.players.find((p) => p.id === id)!.roleId]
 
-export function graveyard(derived: DerivedGame, cursor: Cursor, ended: boolean): GraveDay[] {
-  const { passed } = progress(derived, cursor, ended)
+export function graveyard(derived: DerivedGame, cursor: Cursor): GraveDay[] {
+  const reached = reachedBy(derived, cursor)
   return derived.phases.flatMap((p) => {
     if (!p.day) return []
-    const night = p.day.announced.map((playerId) => ({ playerId, cause: 'night' as const }))
+    const day = p.day
+    const night = day.announced.map((playerId) => ({
+      playerId,
+      cause: 'night' as const,
+      revealed: day.revealed.includes(playerId),
+    }))
     const executed =
-      p.day.executedId !== null && passed(p.index, stepId(p.index, 'execution'))
-        ? [{ playerId: p.day.executedId, cause: 'execution' as const }]
+      day.executedId !== null && reached(p.index, stepId(p.index, 'verdict'))
+        ? [
+            {
+              playerId: day.executedId,
+              cause: 'execution' as const,
+              revealed: day.revealed.includes(day.executedId),
+            },
+          ]
         : []
     return [{ phase: p.index, entries: [...night, ...executed] }]
   })
@@ -78,7 +88,7 @@ export function narratorLog(
   cursor: Cursor,
   ended: boolean,
 ): LogPhase[] {
-  const { reached, passed } = progress(derived, cursor, ended)
+  const reached = reachedBy(derived, cursor)
   return derived.phases.map((p) => {
     const entries: LogEntry[] = []
     if (p.night) {
@@ -110,8 +120,11 @@ export function narratorLog(
     }
     if (p.day) {
       entries.push(...p.day.adjustments.map((a) => ({ kind: 'adjustment' as const, ...a })))
-      if (passed(p.index, stepId(p.index, 'execution'))) {
-        entries.push({ kind: 'execution', targetId: p.day.executedId })
+      if (reached(p.index, stepId(p.index, 'voting'))) {
+        entries.push(...p.day.nominations.map((n) => ({ kind: 'nomination' as const, ...n })))
+      }
+      if (reached(p.index, stepId(p.index, 'verdict'))) {
+        entries.push({ kind: 'verdict', tally: p.day.tally })
       }
     }
     return { phase: p.index, entries }
@@ -123,7 +136,7 @@ export function chronicle(
   derived: DerivedGame,
   cursor: Cursor,
 ): ChroniclePhase[] {
-  const { passed } = progress(derived, cursor, true)
+  const reached = reachedBy(derived, cursor)
   const stepRole = new Map(
     derived.phases.flatMap((p) =>
       p.steps.flatMap((s) => (s.kind === 'action' ? [[s.id, setup.roles[s.roleId]] as const] : [])),
@@ -157,10 +170,11 @@ export function chronicle(
       }
       if (p.day) {
         entries.push(...p.day.announced.map((playerId) => ({ kind: 'died' as const, playerId })))
-        if (passed(p.index, stepId(p.index, 'execution'))) {
+        if (reached(p.index, stepId(p.index, 'verdict'))) {
+          const result = p.day.tally
           entries.push(
-            p.day.executedId
-              ? { kind: 'executed', playerId: p.day.executedId }
+            result.outcome === 'executed'
+              ? { kind: 'executed', playerId: result.playerId, votes: result.votes }
               : { kind: 'noExecution' },
           )
         }
@@ -176,10 +190,10 @@ export function individualWinners(
   cursor: Cursor,
   finalAlive: string[],
 ): string[] {
-  const { passed } = progress(derived, cursor, true)
+  const reached = reachedBy(derived, cursor)
   const executed = new Set(
     derived.phases.flatMap((p) =>
-      p.day?.executedId && passed(p.index, stepId(p.index, 'execution')) ? [p.day.executedId] : [],
+      p.day?.executedId && reached(p.index, stepId(p.index, 'verdict')) ? [p.day.executedId] : [],
     ),
   )
   return setup.players
