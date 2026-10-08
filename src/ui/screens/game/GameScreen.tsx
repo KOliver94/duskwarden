@@ -16,6 +16,7 @@ import { back, currentStep, next, pendingWin } from '@/domain/navigation'
 import { isNight } from '@/domain/timeline'
 import type { Cursor, GameSetup } from '@/domain/types'
 import { useActions, useGame } from '@/store/hooks'
+import { AppSettingsSheet } from '@/ui/components/AppSettingsSheet'
 import { useBackGuard } from '@/ui/hooks/useBackGuard'
 import { useConfirm, type ConfirmRequest } from '@/ui/hooks/useConfirm'
 import { useWakeLock } from '@/ui/hooks/useWakeLock'
@@ -237,6 +238,7 @@ export function GameScreen() {
           onClose={() => setSheet(null)}
         />
       ))}
+      <AppSettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} />
       {confirm.dialog}
     </main>
   )

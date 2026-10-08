@@ -1,7 +1,7 @@
 import { cn } from 'cn'
 import { formatClock } from '@/ui/format'
 import { useStepTimer } from '@/ui/hooks/useStepTimer'
-import { useVibrateOnRise } from '@/ui/hooks/useVibrateOnRise'
+import { useExpiryAlert } from '@/ui/hooks/useExpiryAlert'
 import { Button } from '@/ui/primitives/button'
 import { StepCard } from '../StepCard'
 import type { StepProps } from '../types'
@@ -11,7 +11,7 @@ export function DiscussionCard({ step, game, openSheet }: StepProps) {
   const minutes = game.setup.settings.discussionMinutes
   const remaining = minutes === null ? null : Math.max(0, minutes * 60_000 - elapsed)
   const expired = remaining === 0
-  useVibrateOnRise(expired && running)
+  useExpiryAlert(expired && running)
 
   return (
     <StepCard title="Vita">

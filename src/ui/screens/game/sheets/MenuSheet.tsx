@@ -6,6 +6,7 @@ const ITEMS: [Exclude<SheetId, 'menu' | 'adjust'>, string][] = [
   ['roster', 'Szereposztás'],
   ['graveyard', 'Temető'],
   ['log', 'Mesélői napló'],
+  ['settings', 'Beállítások'],
   ['end', 'Játék befejezése'],
 ]
 

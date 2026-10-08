@@ -1,5 +1,7 @@
 import { MotionConfig } from 'motion/react'
+import { useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { unlockAudio } from '@/lib/alert'
 import { useApp } from '@/store/hooks'
 import { SaveFailedBanner } from '@/ui/components/SaveFailedBanner'
 import { UpdateBanner } from '@/ui/components/UpdateBanner'
@@ -19,6 +21,11 @@ export function App() {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW()
+  useEffect(() => {
+    window.addEventListener('pointerdown', unlockAudio)
+    return () => window.removeEventListener('pointerdown', unlockAudio)
+  }, [])
+
   return (
     <MotionConfig reducedMotion="user">
       <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">

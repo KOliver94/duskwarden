@@ -5,6 +5,7 @@ import { deriveGame } from '@/domain/derive'
 import { aliveAt } from '@/domain/navigation'
 import type { Game } from '@/domain/types'
 import { useActions, useApp } from '@/store/hooks'
+import { AppSettingsSheet } from '@/ui/components/AppSettingsSheet'
 import { HoldButton } from '@/ui/components/HoldButton'
 import { useConfirm } from '@/ui/hooks/useConfirm'
 import {
@@ -29,6 +30,7 @@ export function HomeScreen() {
   const actions = useActions()
   const confirm = useConfirm()
   const [holding, setHolding] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const newGame = () => {
     if (!game || game.ending) return actions.goto('setup')
@@ -62,9 +64,13 @@ export function HomeScreen() {
         <Button size="touch" variant="ghost" onClick={() => actions.goto('library')}>
           Szerepek
         </Button>
+        <Button size="touch" variant="ghost" onClick={() => setSettingsOpen(true)}>
+          Beállítások
+        </Button>
       </nav>
 
       {confirm.dialog}
+      <AppSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       <AlertDialog open={holding} onOpenChange={setHolding}>
         <AlertDialogContent>
