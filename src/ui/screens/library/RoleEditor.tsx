@@ -123,7 +123,7 @@ export function RoleEditor({
           />
         </Field>
         {targets && (
-          <Field label="Saját kérdés">
+          <Field label="Egyéni kérdés">
             <Input
               className="h-14 text-base"
               placeholder={defaultPrompt(role.action, false)}

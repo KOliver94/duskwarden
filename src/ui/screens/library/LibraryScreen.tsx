@@ -79,9 +79,11 @@ export function LibraryScreen() {
           ))}
         </section>
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm tracking-wider text-muted-foreground uppercase">Saját szerepek</h2>
+          <h2 className="text-sm tracking-wider text-muted-foreground uppercase">
+            Egyéni szerepek
+          </h2>
           {sorted.length === 0 && (
-            <p className="text-muted-foreground">Még nincs saját szereped.</p>
+            <p className="text-muted-foreground">Még nincs egyéni szereped.</p>
           )}
           {sorted.map((role) => (
             <RoleRow key={role.id} role={role} onOpen={() => setDetails(role)} />
