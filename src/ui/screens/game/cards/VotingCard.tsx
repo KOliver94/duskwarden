@@ -32,27 +32,27 @@ export function VotingCard({ step, game, derived }: StepProps) {
         {nominations.map((n) => {
           const name = playerById(setup, n.playerId).name
           return (
-            <li
-              key={n.playerId}
-              className="flex items-center gap-2 rounded-xl bg-secondary py-1 pr-1 pl-4"
-            >
-              <span className="flex-1 truncate text-lg font-semibold">{name}</span>
-              <Stepper
-                label={`${name} szavazatai`}
-                value={n.votes}
-                max={alive.length}
-                onChange={(votes) =>
-                  save(nominations.map((m) => (m.playerId === n.playerId ? { ...m, votes } : m)))
-                }
-              />
-              <Button
-                variant="ghost"
-                size="icon-touch"
-                aria-label={`${name} jelölésének törlése`}
-                onClick={() => save(nominations.filter((m) => m.playerId !== n.playerId))}
-              >
-                <X />
-              </Button>
+            <li key={n.playerId} className="flex flex-col gap-1 rounded-xl bg-secondary p-2 pl-4">
+              <span className="text-lg font-semibold break-words">{name}</span>
+              <div className="flex items-center gap-2">
+                <Stepper
+                  label={`${name} szavazatai`}
+                  value={n.votes}
+                  max={alive.length}
+                  onChange={(votes) =>
+                    save(nominations.map((m) => (m.playerId === n.playerId ? { ...m, votes } : m)))
+                  }
+                />
+                <span className="flex-1 text-muted-foreground">szavazat</span>
+                <Button
+                  variant="ghost"
+                  size="icon-touch"
+                  aria-label={`${name} jelölésének törlése`}
+                  onClick={() => save(nominations.filter((m) => m.playerId !== n.playerId))}
+                >
+                  <X />
+                </Button>
+              </div>
             </li>
           )
         })}
