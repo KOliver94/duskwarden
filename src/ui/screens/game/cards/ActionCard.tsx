@@ -1,3 +1,4 @@
+import { Info } from 'lucide-react'
 import { useState } from 'react'
 import { dummyLine, promptFor, sleepLine, wakeLine } from '@/domain/copy'
 import { isSuspicious } from '@/domain/roles'
@@ -94,7 +95,14 @@ export function ActionCard({ step, game, derived }: StepProps & { step: ActionSt
 
   return (
     <StepCard title={role.name} aside={<Countdown stepId={step.id} seconds={role.stepSeconds} />}>
-      <Say>{dummy ? dummyLine(role, step.plural) : wakeLine(role, step.plural)}</Say>
+      <Say>{wakeLine(role, step.plural)}</Say>
+
+      {dummy && (
+        <p className="flex gap-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          {dummyLine(role, step.plural)}
+        </p>
+      )}
 
       {!dummy && (
         <>

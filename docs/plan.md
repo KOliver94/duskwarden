@@ -4433,7 +4433,7 @@ const chosen = derived.effective[step.id]
 ```
 
 - `StepCard` title `role.name`, `aside={<Countdown stepId={step.id} seconds={role.stepSeconds} />}`.
-- `Say`: `dummy ? dummyLine(role, step.plural) : wakeLine(role, step.plural)`.
+- `Say`: `wakeLine(role, step.plural)`, always, so the read-aloud line is identical for living and dead roles. On a dummy step, `dummyLine` is shown below it as a muted GM-only note, never inside a `Say`.
 - Not dummy: line **"Játékos: {names}"** or **"Játékosok: {names}"** (names joined with `, `). If `derived.invalid.has(step.id)`: alert box **"A korábbi választás már nem érvényes. Válassz újra!"**
 - Vest role: question `promptFor(role, false)` plus `(még ${usesLeft} maradt)` when `derived.usesLeft[step.id]` is a number; two `h-14` buttons **"Igen"** (disabled when uses are 0) and **"Nem"**, `aria-pressed` from `chosen`, writing `{ kind: 'vest', use }`.
 - Other roles: question `promptFor(role, step.plural)`; `PlayerGrid` with `derived.options[step.id]`, `selectedId = chosen?.kind === 'target' ? chosen.targetId : undefined`, writing `{ kind: 'target', targetId }`; a full-width `h-14` **"Senkit"** button (`aria-pressed` when `targetId === null`) writing `{ kind: 'target', targetId: null }`.
