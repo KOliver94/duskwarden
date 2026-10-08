@@ -15,7 +15,8 @@ The design lives in [docs/design.md](docs/design.md), the implementation plan in
 | `pnpm e2e` | End-to-end smoke test against a production build (Playwright) |
 | `pnpm lint` | oxlint |
 | `pnpm format` | Prettier |
+| `pnpm deploy:cloudflare` | Build and deploy to Cloudflare |
 
 ## Deploying
 
-The build is fully static. When it is served from a subpath, such as GitHub Pages at `/<repo>/`, build with `BASE_PATH=/<repo>/ pnpm build`.
+Hosted on Cloudflare Workers static assets (`wrangler.jsonc` serves `dist`). Log in once with `pnpm exec wrangler login`, then run `pnpm deploy:cloudflare` to build and deploy. `public/_headers` keeps `index.html`, the manifest and the service worker revalidated, so a new version is picked up on the next visit.
