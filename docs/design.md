@@ -113,7 +113,6 @@ interface Settings {
   killersKnowEachOther: boolean
   autoEnd: boolean
   discussionMinutes: number | null
-  revealRoleOnDeath: boolean     // default true
   jesterWinEndsGame: boolean     // default false
 }
 
@@ -145,9 +144,10 @@ Night N:
 
 Day N:
 
-1. `dN:morning`: deaths of night N (with roles if `revealRoleOnDeath`), manual adjustments.
+1. `dN:morning`: deaths of night N, a role reveal button per death, manual adjustments.
 2. `dN:discussion`: discussion timer.
-3. `dN:execution`: a player or nobody.
+3. `dN:voting`: nominations with recorded vote counts.
+4. `dN:verdict`: the outcome of the vote, with a role reveal button when someone is executed.
 
 Step ids are stable across recomputation because they are keyed by phase, role and player, never by index.
 
@@ -158,15 +158,16 @@ type StepInput =
   | { kind: 'target'; targetId: string | null }   // null = explicit "no target"
   | { kind: 'vest'; use: boolean }
   | { kind: 'tell'; told: string[] }
-  | { kind: 'morning'; adjustments: { playerId: string; dead: boolean }[] }
-  | { kind: 'execution'; targetId: string | null }
+  | { kind: 'morning'; adjustments: { playerId: string; dead: boolean }[]; revealed: string[] }
+  | { kind: 'votes'; nominations: { playerId: string; votes: number }[] }
+  | { kind: 'verdict'; revealed: boolean }
 
 interface Cursor { phase: number; stepId: string }
 ```
 
 The persisted game is `setup + inputs + cursor (+ timers, ending)`. Everything else (alive set, step lists, resolution, histories, win state) is derived by pure functions.
 
-- Next on an action, vest or execution step requires an explicit choice (a player, "no target" or "nobody"), so a step can't be skipped by an accidental tap. Dummy, narration and tell steps can always proceed.
+- Next on an action or vest step requires an explicit choice (a player, "no target", yes or no), so a step can't be skipped by an accidental tap. All other steps can always proceed; a voting step without nominations means nobody is executed.
 - Back moves the cursor to the previous step, crossing into the previous phase when needed.
 - Inputs ahead of the cursor are kept and pre-filled when the GM moves forward again.
 - A phase is closed when `phase < cursor.phase`.
@@ -193,7 +194,15 @@ Constraints, enforced in the target picker with the reason shown:
 ### 4.6 Day
 
 - Morning applies night deaths, then the GM's manual adjustments (add a death or mark someone alive). Adjustments cover house rules and custom role effects.
-- Execution kills the selected player. A Jester executed records an individual win.
+- Voting: the town nominates players one after another; the GM records each nominee's vote count. A nominee must be alive after the morning and can be nominated once per day; a vote count is between 0 and the number of living players. Nominations can be edited or removed. A nomination that becomes invalid after a past edit is ignored and flagged.
+- Verdict, from the valid nominations (`tally(nominations, aliveCount)`):
+  - no nominations → `none`
+  - the highest vote count is shared → `tie`
+  - the highest vote count is not more than half of the living players → `noMajority`; the card shows the votes that would have been needed, `floor(alive / 2) + 1`
+  - otherwise → that nominee is executed.
+- The outcome first appears on the verdict step, so nothing is revealed while the town is still voting. Moving back from the verdict reopens the vote like any other step.
+- An executed Jester records an individual win.
+- Role reveal: each death on the morning card and the executed player on the verdict card has a "Szerep felfedése" button. A revealed role is shown on the card for the GM to announce and is public from then on (Temető). A reveal stored for a player who is no longer among that step's deaths is ignored. The end screen shows every role regardless.
 
 ### 4.7 Editing the past
 
@@ -201,7 +210,7 @@ The GM can move back into any closed phase and change inputs. All later state is
 
 ### 4.8 Win detection and ending
 
-Checked when leaving the morning step and when leaving the execution step. Conditions are evaluated in this order; the first match wins.
+Checked when leaving the morning step and when leaving the verdict step. Conditions are evaluated in this order; the first match wins.
 
 - Hostile = faction `killers`, or neutral goal `soloKiller`.
 - Nobody: all players dead.
@@ -225,6 +234,7 @@ The GM can end the game from the menu at any time, picking the winner. Ending is
 - "Játék folytatása", shown when there is an active or ended game, with a status like "2. éjszaka · 7 élő" or "Vége".
 - "Új játék". If a game is running: a warning dialog, then a hold-to-confirm button (~2 s press). An ended game needs no confirmation.
 - "Szerepek": the role library. Built-ins are view-only; custom roles can be created, edited and deleted.
+- "Beállítások": the app settings sheet (§7).
 
 ### Setup wizard
 
@@ -241,8 +251,10 @@ Prefilled from the last game.
 - Header: phase label, step dots for the current phase, menu.
 - Body: one step card. Transitions slide by direction (Next from the right, Back from the left).
 - Footer: large Vissza / Tovább buttons within thumb reach.
-- Action step card: role, narrator wake line, actor names, prompt, player grid (disabled players greyed with reason), advisory step timer that starts on first entry and pulses and vibrates at zero, investigation signal after selection, GM hint behind a toggle.
-- Menu sheets: Szereposztás (roster), Temető (public history), Mesélői napló (detailed history), Játék befejezése, Kezdőlap.
+- Action step card: role, narrator wake line, actor names, prompt, player grid (disabled players greyed with reason), advisory step timer that starts on first entry and pulses and alerts at zero (§7), investigation signal after selection, GM hint behind a toggle.
+- Voting card: read-aloud line, the nominations in order (name, vote stepper, remove), "Jelölt hozzáadása" opening a picker of living players not yet nominated, and the votes needed for a majority.
+- Verdict card: the outcome as a read-aloud line, the vote count, and "Szerep felfedése" when someone is executed.
+- Menu sheets: Szereposztás (roster), Temető (public history), Mesélői napló (detailed history), Beállítások, Játék befejezése, Kezdőlap.
 
 ### End screen
 
@@ -255,7 +267,7 @@ Prefilled from the last game.
 ## 6. Hidden information
 
 - Night step cards show only the current step. Night deaths appear only on the morning card.
-- Temető shows public information only: night deaths and executions per day, with roles if `revealRoleOnDeath`.
+- Temető shows public information only: night deaths and executions per day, with a role only once it has been revealed.
 - Mesélői napló shows everything: actions, attack results, protections, investigations and results, vest uses, manual adjustments, executions.
 - Mesélői napló and Szereposztás mask player names as seat numbers ("#4") by default. "Nevek mutatása" shows names until the sheet closes.
 
@@ -264,7 +276,9 @@ Prefilled from the last game.
 - Browser and hardware back never leave the game: a guard history entry is pushed on the game screen and re-pushed on `popstate`; back closes the open sheet or dialog, otherwise runs in-app Back.
 - Closing a night and closing a day each require confirmation (§10). Moving back into a closed phase shows the reopen warning once; navigation inside the reopened phase is free.
 - A Screen Wake Lock is held on the game screen and re-acquired on `visibilitychange → visible`, since the browser releases it when the page is hidden.
-- Persistence failure (quota, private mode) shows a persistent banner; the game continues in memory.
+- Persistence failure (quota, private mode) shows a persistent banner; the game continues in memory. A failed write reopens the database once and retries, because iOS Safari drops the connection of a backgrounded page.
+- Timer alerts: when a step countdown or the discussion countdown reaches zero, the app vibrates and plays a short two-tone chime (Web Audio, no audio file), each only if enabled in the app settings and supported by the device. The audio context is unlocked on the first tap anywhere, because iOS blocks sound otherwise. iPhone browsers cannot vibrate.
+- App settings ("Beállítások", reachable from Home and the game menu): "Hang" and "Rezgés" switches, both on by default, and "Próba" to play the alert once. Where vibration is unsupported the sheet says so.
 
 ## 8. Persistence
 
@@ -272,7 +286,7 @@ IndexedDB `duskwarden`, version 1:
 
 - `games` (keyPath `id`): `{ schemaVersion, id, createdAt, updatedAt, setup, inputs, cursor, timers, ending }`. Ended and abandoned games are kept; nothing reads them yet.
 - `customRoles` (keyPath `id`).
-- `prefs` (key-value): `activeGameId`, `nightOrder`, `lastSetup`, `knownPlayers`.
+- `prefs` (key-value): `activeGameId`, `nightOrder`, `lastSetup`, `knownPlayers`, `alerts` (`{ sound: boolean; vibration: boolean }`).
 
 Timers: `Record<stepId, { startedAt: number | null; accumulatedMs: number }>`, so a running timer is correct after a reload.
 
@@ -288,7 +302,8 @@ Writes:
 - generateSW precaches the whole build, fonts included. The app runs offline after the first load.
 - Update prompt is shown only on Home; a new version never reloads the app mid-game.
 - Manifest: name Duskwarden, `display: standalone`, `orientation: portrait`, dark theme and background colors. Icons generated from one SVG.
-- Vite `base` comes from an env variable so the app can be served from a GitHub Pages subpath later.
+- Hosted on Cloudflare Workers static assets: `wrangler.jsonc` serves `./dist`, `public/_headers` makes `sw.js` and `index.html` always revalidate so a cached service worker never blocks updates, and `pnpm deploy:cloudflare` builds and deploys (plain `deploy` collides with pnpm's built-in command).
+- Vite `base` still comes from an env variable for serving from a subpath.
 
 ## 10. Hungarian copy
 
@@ -315,7 +330,8 @@ Glossary:
 | Role counter | 8 / 9 szerep kiosztva |
 | Fill button | Feltöltés városlakókkal |
 | Draw | Újrasorsolás · Indulhat a játék |
-| Settings | A gyilkosok ismerik egymást · Győzelemkor automatikusan vége a játéknak · Vitaidő (perc) · Halottak szerepének felfedése · A bolond győzelmével véget ér a játék |
+| Settings | A gyilkosok ismerik egymást · Győzelemkor automatikusan vége a játéknak · Vitaidő (perc) · A bolond győzelmével véget ér a játék |
+| App settings | Beállítások · Hang · Rezgés · Próba · Ezen az eszközön a böngésző nem tud rezegni. |
 | Phase labels | 2. éjszaka · 3. nap |
 | Navigation | Vissza · Tovább |
 | Dusk | Leszállt az éj. Mindenki csukja be a szemét! |
@@ -336,13 +352,16 @@ Glossary:
 | Read-aloud label | Mondd: |
 | Night deaths | Az éjszaka meghalt: · Az éjszaka senki sem halt meg. |
 | Discussion timer | Indítás · Szünet · Újra · Lejárt az idő! Jöhet a szavazás. |
-| Execution | Kivégzés · Kit végez ki a város? · Ma senkit sem végeztek ki. |
+| Voting | Szavazás · Kit jelöltök kivégzésre? · Jelölt hozzáadása · Még nincs jelölt. · 5 szavazat · Kivégzéshez legalább 4 szavazat kell. |
+| Verdict | Ítélet · Anna kivégzésre kerül. · Döntetlen – ma senkit sem végeznek ki. · Nincs meg a többség – ma senkit sem végeznek ki. · Nem volt jelölt – ma senkit sem végeznek ki. |
+| Reveal | Szerep felfedése · Szerepe: Orvos |
 | Close night | Kezdődhet a 2. nap? Nézd át, minden éjszakai akció rendben van-e. Utána a 2. éjszaka lezárul. [Még nem] [Jöhet a reggel] |
 | Close day | Jöhet a 3. éjszaka? Kivégezve: Anna · Ma senkit sem végeztek ki. [Még nem] [Jöhet az éjszaka] |
 | Reopen | Újranyitod a 2. éjszakát? / Újranyitod a 2. napot? Ez az éjszaka / Ez a nap már lezárult. Ha módosítasz rajta, a későbbi események is megváltozhatnak. [Mégse] [Újranyitás] |
 | Menu | Szereposztás · Temető · Mesélői napló · Nevek mutatása · Játék befejezése · Kezdőlap |
 | Win | A város nyert! · A gyilkosok nyertek! · A sorozatgyilkos nyert! · A bolond nyert! · Senki sem nyert. |
-| End screen | Játék vége · Krónika · Kép mentése · Vissza a játékhoz |
+| End screen | Játék vége · Krónika · Kép mentése · Vissza a játékhoz · Anna – kivégezték (5 szavazat) |
+| Narrator log, day | Jelölés → Anna: 5 szavazat · Kivégzés → Anna · Döntetlen – nem volt kivégzés · Nincs többség – nem volt kivégzés · Nem volt jelölt |
 
 New strings follow the same rules and are reviewed by a native speaker before release.
 
@@ -364,7 +383,7 @@ src/ui/        shadcn components, screens (home, setup, library, game, end), ste
 
 ## 13. Testing
 
-- Engine developed test-first with Vitest: step derivation, resolution, constraints, win checks, navigation, reopening and invalidation, history derivation, Hungarian article and plural helpers.
+- Engine developed test-first with Vitest: step derivation, resolution, constraints, vote tally, reveal validity, win checks, navigation, reopening and invalidation, history derivation, Hungarian article and plural helpers.
 - Repositories and the write queue tested against `fake-indexeddb`.
-- One Playwright smoke test: 5-player setup, play to the end screen, reload mid-night restores the exact step.
+- Playwright: a 5-player smoke test (setup, voting, role reveal, play to the end screen, reload mid-night restores the exact step, browser back stays in the app) and a dead-role test (the read-aloud lines never mention the death).
 - Manual verification in a mobile viewport.
