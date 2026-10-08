@@ -1,6 +1,7 @@
 import { MotionConfig } from 'motion/react'
 import { useApp } from '@/store/hooks'
 import { SaveFailedBanner } from '@/ui/components/SaveFailedBanner'
+import { EndScreen } from '@/ui/screens/end/EndScreen'
 import { GameScreen } from '@/ui/screens/game/GameScreen'
 import { HomeScreen } from '@/ui/screens/HomeScreen'
 import { LibraryScreen } from '@/ui/screens/library/LibraryScreen'
@@ -19,6 +20,7 @@ export function App() {
         {screen === 'setup' && <SetupScreen />}
         {screen === 'library' && <LibraryScreen />}
         {screen === 'game' && hasGame && !ended && <GameScreen />}
+        {screen === 'game' && hasGame && ended && <EndScreen />}
         {screen === 'game' && !hasGame && <HomeScreen />}
       </div>
     </MotionConfig>
