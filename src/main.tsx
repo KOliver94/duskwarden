@@ -1,10 +1,16 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+import '@/index.css'
+import { bootstrap } from '@/store/bootstrap'
+import { StoreProvider } from '@/store/StoreProvider'
 import { App } from '@/ui/App'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+void bootstrap().then((store) =>
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <StoreProvider store={store}>
+        <App />
+      </StoreProvider>
+    </StrictMode>,
+  ),
 )
