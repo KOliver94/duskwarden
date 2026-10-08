@@ -4,6 +4,7 @@ import { mergeNightOrder, rememberPlayers, type SetupDraft } from '@/domain/setu
 import { firstStepId } from '@/domain/timeline'
 import { IDLE_TIMER, pauseTimer, startTimer } from '@/domain/timer'
 import type { Cursor, Game, Player, RoleDef, StepInput, Winner } from '@/domain/types'
+import type { AlertPrefs } from '@/lib/alert'
 import type { Db, Prefs } from '@/storage/db'
 import * as repo from '@/storage/repo'
 import { createWriteQueue, type WriteQueue } from '@/storage/writeQueue'
@@ -22,6 +23,7 @@ export interface AppActions {
   goto(screen: Screen): void
   updateDraft(draft: SetupDraft): void
   forgetPlayer(name: string): void
+  setAlerts(alerts: AlertPrefs): void
   startGame(draft: SetupDraft, players: Player[], nightOrder: string[]): void
   setInput(stepId: string, input: StepInput): void
   moveCursor(cursor: Cursor): void
@@ -113,6 +115,7 @@ export function createAppStore(deps: Deps, initial: InitialState) {
       updateDraft: (draft) => patchPrefs({ lastSetup: draft }),
       forgetPlayer: (name) =>
         patchPrefs({ knownPlayers: get().prefs.knownPlayers.filter((n) => n !== name) }),
+      setAlerts: (alerts) => patchPrefs({ alerts }),
 
       startGame: (draft, players, nightOrder) => {
         const library = rolesById(get().customRoles)

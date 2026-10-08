@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { SetupDraft } from '@/domain/setup'
+import type { AlertPrefs } from '@/lib/alert'
 import type { Game, RoleDef } from '@/domain/types'
 
 export interface Prefs {
@@ -7,6 +8,7 @@ export interface Prefs {
   nightOrder: string[]
   lastSetup: SetupDraft | null
   knownPlayers: string[]
+  alerts: AlertPrefs
 }
 
 interface Schema extends DBSchema {

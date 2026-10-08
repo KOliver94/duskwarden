@@ -7,6 +7,7 @@ export const DEFAULT_PREFS: Prefs = {
   nightOrder: BUILT_IN_ORDER,
   lastSetup: null,
   knownPlayers: [],
+  alerts: { sound: true, vibration: true },
 }
 
 const PREF_KEYS = Object.keys(DEFAULT_PREFS) as (keyof Prefs)[]

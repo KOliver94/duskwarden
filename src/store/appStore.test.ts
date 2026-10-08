@@ -136,6 +136,14 @@ describe('app store', () => {
     expect(stored?.inputs['n1:killer']).toEqual({ kind: 'target', targetId: 'b' })
   })
 
+  it('persists alert preferences', async () => {
+    const { db, store } = await setup()
+    expect(store.getState().prefs.alerts).toEqual({ sound: true, vibration: true })
+    store.getState().setAlerts({ sound: false, vibration: true })
+    await store.getState().flush()
+    expect((await loadPrefs(db)).alerts).toEqual({ sound: false, vibration: true })
+  })
+
   it('flags failed saves and keeps playing in memory', async () => {
     const { store, start } = await setup({ db: null })
     start()
