@@ -56,7 +56,8 @@ describe('buildSteps', () => {
     expect(ids(makeSetup(['killer', 'villager']), 1)).toEqual([
       'd1:morning',
       'd1:discussion',
-      'd1:execution',
+      'd1:voting',
+      'd1:verdict',
     ])
   })
 })

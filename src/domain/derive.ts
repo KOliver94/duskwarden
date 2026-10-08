@@ -5,10 +5,12 @@ import type {
   Adjustment,
   DisabledReason,
   GameSetup,
+  Nomination,
   Step,
   StepInput,
   Winner,
 } from './types'
+import { tally, type Tally } from './vote'
 import { checkWin } from './win'
 
 export interface TargetOption {
@@ -35,7 +37,10 @@ export interface DayResult {
   adjustments: Adjustment[]
   announced: string[]
   aliveAfterMorning: string[]
+  nominations: Nomination[]
+  tally: Tally
   executedId: string | null
+  revealed: string[]
   winAfterMorning: Winner | null
   winAfterExecution: Winner | null
 }
@@ -216,12 +221,14 @@ export function deriveGame(
     const morningId = stepId(phase, 'morning')
     const morning = inputs[morningId]
     let adjustments: Adjustment[] = []
+    let requestedReveals: string[] = []
     if (morning?.kind === 'morning') {
       adjustments = morning.adjustments.filter(
         (a) => seatOrder.includes(a.playerId) && aliveSet.has(a.playerId) === a.dead,
       )
       if (adjustments.length !== morning.adjustments.length) invalid.add(morningId)
-      effective[morningId] = { kind: 'morning', adjustments }
+      // Records saved before reveals existed have no list.
+      requestedReveals = morning.revealed ?? []
     } else if (morning) invalid.add(morningId)
 
     const killedByGm = new Set(adjustments.filter((a) => a.dead).map((a) => a.playerId))
@@ -235,24 +242,42 @@ export function deriveGame(
       ...nightDeaths.filter((id) => !revived.includes(id)),
       ...killedByGm,
     ])
+    const nightReveals = inSeatOrder(requestedReveals.filter((id) => announced.includes(id)))
+    if (morning?.kind === 'morning') {
+      effective[morningId] = { kind: 'morning', adjustments, revealed: nightReveals }
+    }
 
-    const executionId = stepId(phase, 'execution')
+    const votingId = stepId(phase, 'voting')
     const afterMorning = new Set(aliveAfterMorning)
-    options[executionId] = seatOrder.map((id) => ({
+    options[votingId] = seatOrder.map((id) => ({
       playerId: id,
       disabled: afterMorning.has(id) ? null : 'dead',
     }))
-    const execution = inputs[executionId]
-    let executedId: string | null = null
-    if (execution) {
-      const valid =
-        execution.kind === 'execution' &&
-        (execution.targetId === null || afterMorning.has(execution.targetId))
-      if (valid) {
-        effective[executionId] = execution
-        executedId = execution.targetId
-      } else invalid.add(executionId)
-    }
+    const voting = inputs[votingId]
+    let nominations: Nomination[] = []
+    if (voting?.kind === 'votes') {
+      const seen = new Set<string>()
+      nominations = voting.nominations.filter((n) => {
+        const valid =
+          afterMorning.has(n.playerId) &&
+          !seen.has(n.playerId) &&
+          Number.isInteger(n.votes) &&
+          n.votes >= 0 &&
+          n.votes <= aliveAfterMorning.length
+        seen.add(n.playerId)
+        return valid
+      })
+      if (nominations.length !== voting.nominations.length) invalid.add(votingId)
+      effective[votingId] = { kind: 'votes', nominations }
+    } else if (voting) invalid.add(votingId)
+
+    const result = tally(nominations, aliveAfterMorning.length)
+    const executedId = result.outcome === 'executed' ? result.playerId : null
+    const verdictId = stepId(phase, 'verdict')
+    const verdict = inputs[verdictId]
+    if (verdict?.kind === 'verdict') effective[verdictId] = verdict
+    else if (verdict) invalid.add(verdictId)
+    const executionRevealed = executedId !== null && verdict?.kind === 'verdict' && verdict.revealed
 
     const aliveAtEnd = aliveAfterMorning.filter((id) => id !== executedId)
     phases.push({
@@ -265,7 +290,10 @@ export function deriveGame(
         adjustments,
         announced,
         aliveAfterMorning,
+        nominations,
+        tally: result,
         executedId,
+        revealed: executionRevealed ? [...nightReveals, executedId] : nightReveals,
         winAfterMorning: checkWin(setup, aliveAfterMorning, null),
         winAfterExecution: checkWin(setup, aliveAtEnd, executedId),
       },

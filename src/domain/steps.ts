@@ -2,7 +2,7 @@ import { wakingOrder } from './roles'
 import { isNight, stepId } from './timeline'
 import type { GameSetup, RoleDef, Settings, Step } from './types'
 
-const DAY_SLOTS = ['morning', 'discussion', 'execution'] as const
+const DAY_SLOTS = ['morning', 'discussion', 'voting', 'verdict'] as const
 
 const perPlayer = (role: RoleDef, settings: Settings) =>
   role.action === 'vest' || (role.faction === 'killers' && !settings.killersKnowEachOther)

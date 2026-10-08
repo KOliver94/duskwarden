@@ -36,7 +36,6 @@ export interface Settings {
   killersKnowEachOther: boolean
   autoEnd: boolean
   discussionMinutes: number | null
-  revealRoleOnDeath: boolean
   jesterWinEndsGame: boolean
 }
 
@@ -61,8 +60,9 @@ export type StepInput =
   | { kind: 'target'; targetId: string | null }
   | { kind: 'vest'; use: boolean }
   | { kind: 'tell'; told: string[] }
-  | { kind: 'morning'; adjustments: Adjustment[] }
-  | { kind: 'execution'; targetId: string | null }
+  | { kind: 'morning'; adjustments: Adjustment[]; revealed: string[] }
+  | { kind: 'votes'; nominations: Nomination[] }
+  | { kind: 'verdict'; revealed: boolean }
 
 export interface Cursor {
   phase: number
@@ -101,7 +101,7 @@ interface StepBase {
 }
 
 export type Step =
-  | (StepBase & { kind: 'dusk' | 'tell' | 'morning' | 'discussion' | 'execution' })
+  | (StepBase & { kind: 'dusk' | 'tell' | 'morning' | 'discussion' | 'voting' | 'verdict' })
   | (StepBase & { kind: 'killersMeet'; actorIds: string[] })
   | (StepBase & {
       kind: 'action'

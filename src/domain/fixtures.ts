@@ -7,7 +7,6 @@ const SETTINGS: Settings = {
   killersKnowEachOther: true,
   autoEnd: true,
   discussionMinutes: null,
-  revealRoleOnDeath: true,
   jesterWinEndsGame: false,
 }
 

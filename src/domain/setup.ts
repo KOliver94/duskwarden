@@ -11,7 +11,6 @@ export const DEFAULT_SETTINGS: Settings = {
   killersKnowEachOther: true,
   autoEnd: true,
   discussionMinutes: null,
-  revealRoleOnDeath: true,
   jesterWinEndsGame: false,
 }
 

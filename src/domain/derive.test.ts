@@ -5,7 +5,6 @@ import type { StepInput } from './types'
 
 // p1 killer, p2 doctor, p3 detective, p4 villager, p5 villager
 const s = makeSetup(['killer', 'doctor', 'detective', 'villager', 'villager'])
-const exec = (targetId: string | null): StepInput => ({ kind: 'execution', targetId })
 const option = (d: ReturnType<typeof deriveGame>, stepId: string, playerId: string) =>
   d.options[stepId].find((o) => o.playerId === playerId)?.disabled
 
@@ -90,19 +89,23 @@ describe('target options', () => {
   })
 })
 
+const votes = (...nominations: [string, number][]): StepInput => ({
+  kind: 'votes',
+  nominations: nominations.map(([playerId, n]) => ({ playerId, votes: n })),
+})
+const morning = (adjustments: { playerId: string; dead: boolean }[], revealed: string[] = []) =>
+  ({ kind: 'morning', adjustments, revealed }) as StepInput
+
 describe('day', () => {
   it('applies morning adjustments to the announcement and the living', () => {
     const d = deriveGame(
       s,
       {
         'n1:killer': t('p4'),
-        'd1:morning': {
-          kind: 'morning',
-          adjustments: [
-            { playerId: 'p4', dead: false },
-            { playerId: 'p5', dead: true },
-          ],
-        },
+        'd1:morning': morning([
+          { playerId: 'p4', dead: false },
+          { playerId: 'p5', dead: true },
+        ]),
       },
       1,
     )
@@ -111,27 +114,67 @@ describe('day', () => {
   })
 
   it('ignores an adjustment that no longer matches the night', () => {
-    const d = deriveGame(
-      s,
-      { 'd1:morning': { kind: 'morning', adjustments: [{ playerId: 'p5', dead: false }] } },
-      1,
-    )
+    const d = deriveGame(s, { 'd1:morning': morning([{ playerId: 'p5', dead: false }]) }, 1)
     expect(d.invalid.has('d1:morning')).toBe(true)
-    expect(d.effective['d1:morning']).toEqual({ kind: 'morning', adjustments: [] })
+    expect(d.effective['d1:morning']).toEqual(morning([]))
   })
 
-  it('executes and checks wins at both checkpoints', () => {
-    const d = deriveGame(s, { 'd1:execution': exec('p1') }, 1)
+  it('accepts a morning input saved before reveals existed', () => {
+    const legacy = { kind: 'morning', adjustments: [] } as unknown as StepInput
+    const d = deriveGame(s, { 'n1:killer': t('p4'), 'd1:morning': legacy }, 1)
+    expect(d.phases[1].day!.revealed).toEqual([])
+    expect(d.invalid.has('d1:morning')).toBe(false)
+  })
+
+  it('keeps reveals only for that morning’s deaths', () => {
+    const d = deriveGame(s, { 'n1:killer': t('p4'), 'd1:morning': morning([], ['p4', 'p5']) }, 1)
+    expect(d.phases[1].day!.revealed).toEqual(['p4'])
+    expect(d.effective['d1:morning']).toEqual(morning([], ['p4']))
+  })
+
+  it('executes the vote winner and checks wins at both checkpoints', () => {
+    const d = deriveGame(s, { 'd1:voting': votes(['p1', 3]) }, 1)
+    expect(d.phases[1].day!.tally).toEqual({ outcome: 'executed', playerId: 'p1', votes: 3 })
+    expect(d.phases[1].day!.executedId).toBe('p1')
     expect(d.phases[1].day!.winAfterMorning).toBeNull()
     expect(d.phases[1].day!.winAfterExecution).toBe('town')
     expect(d.phases[1].aliveAtEnd).toEqual(['p2', 'p3', 'p4', 'p5'])
   })
 
-  it('invalidates a later choice when an earlier edit kills its target', () => {
-    const d = deriveGame(s, { 'n1:killer': t('p4'), 'd1:execution': exec('p4') }, 1)
-    expect(d.invalid.has('d1:execution')).toBe(true)
-    expect(d.effective['d1:execution']).toBeUndefined()
+  it('executes nobody on a tie', () => {
+    const d = deriveGame(s, { 'd1:voting': votes(['p1', 2], ['p2', 2]) }, 1)
     expect(d.phases[1].day!.executedId).toBeNull()
-    expect(option(d, 'd1:execution', 'p4')).toBe('dead')
+    expect(d.phases[1].aliveAtEnd).toHaveLength(5)
+  })
+
+  it('ignores a nomination whose nominee died after an edit', () => {
+    const d = deriveGame(s, { 'n1:killer': t('p4'), 'd1:voting': votes(['p4', 4], ['p1', 1]) }, 1)
+    expect(d.invalid.has('d1:voting')).toBe(true)
+    expect(d.phases[1].day!.nominations).toEqual([{ playerId: 'p1', votes: 1 }])
+    expect(d.phases[1].day!.executedId).toBeNull()
+    expect(option(d, 'd1:voting', 'p4')).toBe('dead')
+  })
+
+  it('rejects more votes than living players', () => {
+    const d = deriveGame(s, { 'n1:killer': t('p4'), 'd1:voting': votes(['p1', 5]) }, 1)
+    expect(d.invalid.has('d1:voting')).toBe(true)
+    expect(d.phases[1].day!.executedId).toBeNull()
+  })
+
+  it('ignores a second nomination of the same player', () => {
+    const d = deriveGame(s, { 'd1:voting': votes(['p1', 3], ['p1', 1]) }, 1)
+    expect(d.invalid.has('d1:voting')).toBe(true)
+    expect(d.phases[1].day!.executedId).toBe('p1')
+  })
+
+  it('reveals the executed role only after the verdict reveal', () => {
+    const hidden = deriveGame(s, { 'd1:voting': votes(['p1', 3]) }, 1)
+    expect(hidden.phases[1].day!.revealed).toEqual([])
+    const shown = deriveGame(
+      s,
+      { 'd1:voting': votes(['p1', 3]), 'd1:verdict': { kind: 'verdict', revealed: true } },
+      1,
+    )
+    expect(shown.phases[1].day!.revealed).toEqual(['p1'])
   })
 })
