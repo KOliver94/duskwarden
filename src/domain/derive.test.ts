@@ -172,9 +172,19 @@ describe('day', () => {
     expect(hidden.phases[1].day!.revealed).toEqual([])
     const shown = deriveGame(
       s,
-      { 'd1:voting': votes(['p1', 3]), 'd1:verdict': { kind: 'verdict', revealed: true } },
+      { 'd1:voting': votes(['p1', 3]), 'd1:verdict': { kind: 'verdict', revealedId: 'p1' } },
       1,
     )
     expect(shown.phases[1].day!.revealed).toEqual(['p1'])
+  })
+
+  it('does not carry a verdict reveal over to a different executed player', () => {
+    const d = deriveGame(
+      s,
+      { 'd1:voting': votes(['p2', 3]), 'd1:verdict': { kind: 'verdict', revealedId: 'p1' } },
+      1,
+    )
+    expect(d.phases[1].day!.executedId).toBe('p2')
+    expect(d.phases[1].day!.revealed).toEqual([])
   })
 })

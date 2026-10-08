@@ -277,7 +277,8 @@ export function deriveGame(
     const verdict = inputs[verdictId]
     if (verdict?.kind === 'verdict') effective[verdictId] = verdict
     else if (verdict) invalid.add(verdictId)
-    const executionRevealed = executedId !== null && verdict?.kind === 'verdict' && verdict.revealed
+    const executionRevealed =
+      executedId !== null && verdict?.kind === 'verdict' && verdict.revealedId === executedId
 
     const aliveAtEnd = aliveAfterMorning.filter((id) => id !== executedId)
     phases.push({

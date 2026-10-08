@@ -39,7 +39,7 @@ describe('graveyard', () => {
     const revealed = {
       ...inputs,
       'd1:morning': { kind: 'morning', adjustments: [], revealed: ['p5'] },
-      'd1:verdict': { kind: 'verdict', revealed: true },
+      'd1:verdict': { kind: 'verdict', revealedId: 'p1' },
     } satisfies Record<string, StepInput>
     expect(graveyard(deriveGame(s, revealed, 1), at(1, 'd1:verdict'))[0].entries).toEqual([
       { playerId: 'p5', cause: 'night', revealed: true },

@@ -62,7 +62,7 @@ export type StepInput =
   | { kind: 'tell'; told: string[] }
   | { kind: 'morning'; adjustments: Adjustment[]; revealed: string[] }
   | { kind: 'votes'; nominations: Nomination[] }
-  | { kind: 'verdict'; revealed: boolean }
+  | { kind: 'verdict'; revealedId: string | null }
 
 export interface Cursor {
   phase: number

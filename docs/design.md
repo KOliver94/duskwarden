@@ -160,7 +160,7 @@ type StepInput =
   | { kind: 'tell'; told: string[] }
   | { kind: 'morning'; adjustments: { playerId: string; dead: boolean }[]; revealed: string[] }
   | { kind: 'votes'; nominations: { playerId: string; votes: number }[] }
-  | { kind: 'verdict'; revealed: boolean }
+  | { kind: 'verdict'; revealedId: string | null }
 
 interface Cursor { phase: number; stepId: string }
 ```
@@ -202,7 +202,7 @@ Constraints, enforced in the target picker with the reason shown:
   - otherwise → that nominee is executed.
 - The outcome first appears on the verdict step, so nothing is revealed while the town is still voting. Moving back from the verdict reopens the vote like any other step.
 - An executed Jester records an individual win.
-- Role reveal: each death on the morning card and the executed player on the verdict card has a "Szerep felfedése" button. A revealed role is shown on the card for the GM to announce and is public from then on (Temető). A reveal stored for a player who is no longer among that step's deaths is ignored. The end screen shows every role regardless.
+- Role reveal: each death on the morning card and the executed player on the verdict card has a "Szerep felfedése" button. A revealed role is shown on the card for the GM to announce and is public from then on (Temető). A reveal stored for a player who is no longer among that step's deaths, or no longer the executed player, is ignored. The end screen shows every role regardless.
 
 ### 4.7 Editing the past
 

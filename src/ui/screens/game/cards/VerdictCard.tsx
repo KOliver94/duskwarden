@@ -38,7 +38,7 @@ export function VerdictCard({ step, game, derived }: StepProps) {
           <Button
             variant="outline"
             size="touch"
-            onClick={() => actions.setInput(step.id, { kind: 'verdict', revealed: true })}
+            onClick={() => actions.setInput(step.id, { kind: 'verdict', revealedId: player.id })}
           >
             Szerep felfedése
           </Button>
