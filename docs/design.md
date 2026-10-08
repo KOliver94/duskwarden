@@ -230,7 +230,7 @@ The GM can end the game from the menu at any time, picking the winner. Ending is
 
 Prefilled from the last game.
 
-1. Játékosok: names in seating order, drag to reorder. Names must be unique and non-empty.
+1. Játékosok: names in seating order, drag to reorder. Names must be unique and non-empty. Below the list, every previously used name not yet in the list is a chip ("Korábbi játékosok"); tapping a chip appends that player. Chips can be removed from the pool in an edit mode. The pool is updated when a game starts, most recently used first.
 2. Szerepek: count stepper per role, a live "8 / 9 szerep kiosztva" counter, a "Feltöltés városlakókkal" button. Start is blocked until the total equals the player count. No hostile role shows a warning, not a block.
 3. Ébredési sorrend: dnd-kit list of the waking roles in this game. The new order is merged into the global order: the selected roles are rearranged among the positions they already occupy.
 4. Beállítások: the settings of §4.2.
@@ -272,7 +272,7 @@ IndexedDB `duskwarden`, version 1:
 
 - `games` (keyPath `id`): `{ schemaVersion, id, createdAt, updatedAt, setup, inputs, cursor, timers, ending }`. Ended and abandoned games are kept; nothing reads them yet.
 - `customRoles` (keyPath `id`).
-- `prefs` (key-value): `activeGameId`, `nightOrder`, `lastSetup`.
+- `prefs` (key-value): `activeGameId`, `nightOrder`, `lastSetup`, `knownPlayers`.
 
 Timers: `Record<stepId, { startedAt: number | null; accumulatedMs: number }>`, so a running timer is correct after a reload.
 
@@ -309,6 +309,7 @@ Glossary:
 | Running game warning | Fut egy játék! Ha újat kezdesz, a mostanit nem tudod majd folytatni. |
 | Hold to confirm | Tartsd lenyomva a megerősítéshez |
 | Setup pages | Játékosok · Szerepek · Ébredési sorrend · Beállítások · Sorsolás |
+| Known players | Korábbi játékosok |
 | Role counter | 8 / 9 szerep kiosztva |
 | Fill button | Feltöltés városlakókkal |
 | Draw | Újrasorsolás · Indulhat a játék |
@@ -327,7 +328,7 @@ Glossary:
 | Prompt other | Kit választ? · Kit választanak? |
 | Vest | Felveszi a golyóálló mellényt? (még 3 maradt) |
 | No target | Senkit |
-| Investigation | Jelezd neki: Gyanús 👎 · Nem gyanús 👍 |
+| Investigation | Jelezd neki: Gyanús 👍 · Nem gyanús 👎 |
 | Disabled reasons | Halott · Előző éjjel is őt védte · Magát már megvédte egyszer |
 | Morning | Felvirradt a 3. nap |
 | Night deaths | Az éjszaka meghalt: · Az éjszaka senki sem halt meg. |
