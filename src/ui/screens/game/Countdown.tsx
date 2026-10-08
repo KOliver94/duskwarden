@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { formatClock } from '@/ui/format'
 import { cn } from 'cn'
 import { useStepTimer } from '@/ui/hooks/useStepTimer'
-import { useExpiryAlert } from '@/ui/hooks/useExpiryAlert'
 
 export function Countdown({ stepId, seconds }: { stepId: string; seconds: number }) {
   const { elapsed, idle, running, start, reset } = useStepTimer(stepId)
@@ -12,7 +11,6 @@ export function Countdown({ stepId, seconds }: { stepId: string; seconds: number
   useEffect(() => {
     if (idle && seconds > 0) start()
   }, [idle, seconds, start])
-  useExpiryAlert(expired)
 
   if (seconds <= 0) return null
   return (

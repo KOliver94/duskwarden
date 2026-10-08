@@ -251,7 +251,7 @@ Prefilled from the last game.
 - Header: phase label, step dots for the current phase, menu.
 - Body: one step card. Transitions slide by direction (Next from the right, Back from the left).
 - Footer: large Vissza / Tovább buttons within thumb reach.
-- Action step card: role, narrator wake line, actor names, prompt, player grid (disabled players greyed with reason), advisory step timer that starts on first entry and pulses and alerts at zero (§7), investigation signal after selection, GM hint behind a toggle.
+- Action step card: role, narrator wake line, actor names, prompt, player grid (disabled players greyed with reason), advisory step timer that starts on first entry and pulses at zero (silently, §7), investigation signal after selection, GM hint behind a toggle.
 - Voting card: read-aloud line, the nominations in order (name, vote stepper, remove), "Jelölt hozzáadása" opening a picker of living players not yet nominated, and the votes needed for a majority.
 - Verdict card: the outcome as a read-aloud line, the vote count, and "Szerep felfedése" when someone is executed.
 - Menu sheets: Szereposztás (roster), Temető (public history), Mesélői napló (detailed history), Beállítások, Játék befejezése, Kezdőlap.
@@ -277,7 +277,7 @@ Prefilled from the last game.
 - Closing a night and closing a day each require confirmation (§10). Moving back into a closed phase shows the reopen warning once; navigation inside the reopened phase is free.
 - A Screen Wake Lock is held on the game screen and re-acquired on `visibilitychange → visible`, since the browser releases it when the page is hidden.
 - Persistence failure (quota, private mode) shows a persistent banner; the game continues in memory. A failed write reopens the database once and retries, because iOS Safari drops the connection of a backgrounded page.
-- Timer alerts: when a step countdown or the discussion countdown reaches zero, the app vibrates and plays a short two-tone chime (Web Audio, no audio file), each only if enabled in the app settings and supported by the device. The audio context is unlocked on the first tap anywhere, because iOS blocks sound otherwise. iPhone browsers cannot vibrate.
+- Timer alerts: when the discussion countdown reaches zero, the app vibrates and plays a short two-tone chime (Web Audio, no audio file), each only if enabled in the app settings and supported by the device. The audio context is unlocked on the first tap anywhere, because iOS blocks sound otherwise. iPhone browsers cannot vibrate. Night step countdowns only pulse on screen: a dead role's dummy step always runs its countdown out, so a sound or buzz there would tell the table which roles are dead.
 - App settings ("Beállítások", reachable from Home and the game menu): "Hang" and "Rezgés" switches, both on by default, and "Próba" to play the alert once. Where vibration is unsupported the sheet says so.
 
 ## 8. Persistence
