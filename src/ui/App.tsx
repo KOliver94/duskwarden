@@ -1,9 +1,17 @@
+import { MotionConfig } from 'motion/react'
+import { useApp } from '@/store/hooks'
+import { SaveFailedBanner } from '@/ui/components/SaveFailedBanner'
+import { HomeScreen } from '@/ui/screens/HomeScreen'
+
 export function App() {
+  const screen = useApp((s) => s.screen)
+  const saveFailed = useApp((s) => s.saveFailed)
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-4 px-4">
-      <h1 className="font-display text-4xl text-primary">Duskwarden</h1>
-      <p>Árvíztűrő tükörfúrógép – ŐŰ őű</p>
-      <p className="font-display">Árvíztűrő tükörfúrógép – ŐŰ őű</p>
-    </main>
+    <MotionConfig reducedMotion="user">
+      <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
+        {saveFailed && <SaveFailedBanner />}
+        {screen === 'home' && <HomeScreen />}
+      </div>
+    </MotionConfig>
   )
 }

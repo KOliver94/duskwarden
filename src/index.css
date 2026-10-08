@@ -62,6 +62,12 @@
 
 body {
   @apply bg-background text-foreground font-sans antialiased;
+  background-image: radial-gradient(
+    ellipse 120% 60% at 50% 0%,
+    color-mix(in oklch, var(--primary) 9%, transparent),
+    transparent 70%
+  );
+  background-attachment: fixed;
   min-height: 100dvh;
   /* Pull-to-refresh would reload the page mid-game. */
   overscroll-behavior: none;
