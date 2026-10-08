@@ -92,6 +92,10 @@ test('plays a full game, survives a reload and keeps browser back inside the app
 
   await expect(page.getByText('Az éjszaka meghalt:')).toBeVisible()
   await expect(page.getByText(new RegExp(`☠ ${cast.villagers[0]}`))).toBeVisible()
+  await page.getByRole('button', { name: 'Szerep felfedése' }).click()
+  await expect(page.getByText(new RegExp(`☠ ${cast.villagers[0]} – Városlakó`))).toBeVisible()
+  await page.getByRole('button', { name: 'Elrejtés' }).click()
+  await expect(page.getByText(/– Városlakó/)).toHaveCount(0)
 
   await page.goBack()
   await expect(page.getByText('Újranyitod az 1. éjszakát?')).toBeVisible()
@@ -110,6 +114,10 @@ test('plays a full game, survives a reload and keeps browser back inside the app
   await next(page)
 
   await expect(page.getByText(`${cast.killer} kivégzésre kerül.`)).toBeVisible()
+  await expect(page.getByText(/Szerepe:/)).toHaveCount(0)
+  await page.getByRole('button', { name: 'Szerep felfedése' }).click()
+  await expect(page.getByText(/Szerepe:\s*Gyilkos/)).toBeVisible()
+  await page.getByRole('button', { name: 'Elrejtés' }).click()
   await expect(page.getByText(/Szerepe:/)).toHaveCount(0)
   await page.getByRole('button', { name: 'Szerep felfedése' }).click()
   await expect(page.getByText(/Szerepe:\s*Gyilkos/)).toBeVisible()

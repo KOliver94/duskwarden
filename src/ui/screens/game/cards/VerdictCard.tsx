@@ -24,10 +24,19 @@ export function VerdictCard({ step, game, derived }: StepProps) {
         <p className="text-muted-foreground">{result.votes} szavazat</p>
         {revealed ? (
           <>
-            <p className="text-lg">
-              Szerepe:{' '}
-              <span className={cn('font-semibold', FACTION_TONE[role.faction])}>{role.name}</span>
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="flex-1 text-lg">
+                Szerepe:{' '}
+                <span className={cn('font-semibold', FACTION_TONE[role.faction])}>{role.name}</span>
+              </p>
+              <Button
+                variant="ghost"
+                className="h-14"
+                onClick={() => actions.setInput(step.id, { kind: 'verdict', revealedId: null })}
+              >
+                Elrejtés
+              </Button>
+            </div>
             {role.neutralGoal === 'executed' && (
               <p className="font-semibold text-primary">
                 {winnerLabel({ roleId: role.id }, setup.roles)}

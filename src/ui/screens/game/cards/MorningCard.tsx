@@ -14,12 +14,14 @@ export function MorningCard({ step, game, derived, openSheet }: StepProps) {
   const day = derived.phases[step.phase].day!
   const addedByGm = new Set(day.adjustments.filter((a) => a.dead).map((a) => a.playerId))
 
-  const reveal = (id: string) =>
+  const setRevealed = (id: string, shown: boolean) => {
+    const others = day.revealed.filter((r) => r !== id && day.announced.includes(r))
     actions.setInput(step.id, {
       kind: 'morning',
       adjustments: day.adjustments,
-      revealed: [...day.revealed.filter((r) => day.announced.includes(r)), id],
+      revealed: shown ? [...others, id] : others,
     })
+  }
 
   return (
     <StepCard title="Reggel" aside={<Sun className="size-8 text-primary" />}>
@@ -52,8 +54,20 @@ export function MorningCard({ step, game, derived, openSheet }: StepProps) {
                       <span className="text-sm text-muted-foreground"> (mesélői módosítás)</span>
                     )}
                   </span>
-                  {!day.revealed.includes(id) && (
-                    <Button variant="outline" className="h-14 shrink-0" onClick={() => reveal(id)}>
+                  {day.revealed.includes(id) ? (
+                    <Button
+                      variant="ghost"
+                      className="h-14 shrink-0"
+                      onClick={() => setRevealed(id, false)}
+                    >
+                      Elrejtés
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="h-14 shrink-0"
+                      onClick={() => setRevealed(id, true)}
+                    >
                       Szerep felfedése
                     </Button>
                   )}
