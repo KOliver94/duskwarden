@@ -9,3 +9,10 @@ export interface StepProps {
   derived: DerivedGame
   openSheet(id: SheetId): void
 }
+
+export interface SheetProps {
+  game: Game
+  derived: DerivedGame
+  open: boolean
+  onClose(): void
+}

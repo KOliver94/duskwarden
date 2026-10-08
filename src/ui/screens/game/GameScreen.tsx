@@ -21,6 +21,12 @@ import { useConfirm, type ConfirmRequest } from '@/ui/hooks/useConfirm'
 import { useWakeLock } from '@/ui/hooks/useWakeLock'
 import { playerById } from '@/ui/names'
 import { Button } from '@/ui/primitives/button'
+import { AdjustSheet } from './sheets/AdjustSheet'
+import { EndGameSheet } from './sheets/EndGameSheet'
+import { GraveyardSheet } from './sheets/GraveyardSheet'
+import { MenuSheet } from './sheets/MenuSheet'
+import { NarratorLogSheet } from './sheets/NarratorLogSheet'
+import { RosterSheet } from './sheets/RosterSheet'
 import { StepView } from './StepView'
 import type { SheetId } from './types'
 
@@ -205,6 +211,32 @@ export function GameScreen() {
         </Button>
       </footer>
 
+      <MenuSheet
+        open={sheet === 'menu'}
+        onClose={() => setSheet(null)}
+        onNavigate={setSheet}
+        onHome={() => {
+          setSheet(null)
+          actions.goto('home')
+        }}
+      />
+      {(
+        [
+          ['roster', RosterSheet],
+          ['graveyard', GraveyardSheet],
+          ['log', NarratorLogSheet],
+          ['end', EndGameSheet],
+          ['adjust', AdjustSheet],
+        ] as const
+      ).map(([id, Sheet]) => (
+        <Sheet
+          key={id}
+          game={game}
+          derived={derived}
+          open={sheet === id}
+          onClose={() => setSheet(null)}
+        />
+      ))}
       {confirm.dialog}
     </main>
   )
