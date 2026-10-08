@@ -279,7 +279,7 @@ Timers: `Record<stepId, { startedAt: number | null; accumulatedMs: number }>`, s
 Writes:
 
 - Every store change writes the whole game record (a few KB). Writes go through one serialized queue that coalesces to the latest state, so writes never land out of order.
-- The queue is flushed on `visibilitychange → hidden`, the last reliable moment before mobile browsers kill the page.
+- Writes start immediately (no debounce), so at most one coalesced write is ever pending when the page is hidden or killed.
 - `navigator.storage.persist()` is requested when the first game starts.
 - On boot the active game is loaded before the first render, so a reload never flashes Home.
 
@@ -298,7 +298,9 @@ Rules:
 
 - Role names are capitalized as standalone labels ("Orvos") and lowercase inside sentences ("Felébred az orvos.").
 - The article before a role name is `az` before a vowel-initial word, `a` otherwise; custom role names get it computed.
-- Player names never appear in inflected positions (no "Annát", "Annának"), because suffixes can't be generated reliably. Templates use names as labels or subjects only: "Anna — meghalt", "Gyilkos → Anna".
+- The article before an ordinal number follows its spoken form: `az 1.` (első), `az 5.` (ötödik), `az 50.`–`az 59.`, otherwise `a`.
+- UI text uses the Hungarian en dash (–), never the em dash.
+- Player names never appear in inflected positions (no "Annát", "Annának"), because suffixes can't be generated reliably. Templates use names as labels or subjects only: "Anna – meghalt", "Gyilkos → Anna".
 - Shared steps with several actors use plural forms (`namePlural`, plural verbs).
 
 Glossary:
@@ -329,14 +331,15 @@ Glossary:
 | Vest | Felveszi a golyóálló mellényt? (még 3 maradt) |
 | No target | Senkit |
 | Investigation | Jelezd neki: Gyanús 👍 · Nem gyanús 👎 |
-| Disabled reasons | Halott · Előző éjjel is őt védte · Magát már megvédte egyszer |
-| Morning | Felvirradt a 3. nap |
+| Disabled reasons | Halott · Előző éjjel is őt védte · Magát már nem védheti meg |
+| Morning | Felvirradt a 3. nap. Mindenki kinyithatja a szemét! |
+| Read-aloud label | Mondd: |
 | Night deaths | Az éjszaka meghalt: · Az éjszaka senki sem halt meg. |
 | Discussion timer | Indítás · Szünet · Újra · Lejárt az idő! Jöhet a szavazás. |
 | Execution | Kivégzés · Kit végez ki a város? · Ma senkit sem végeztek ki. |
-| Close night | Kezdődhet a 3. nap? Nézd át, minden éjszakai akció rendben van-e. Utána a 2. éjszaka lezárul. [Még nem] [Jöhet a reggel] |
+| Close night | Kezdődhet a 2. nap? Nézd át, minden éjszakai akció rendben van-e. Utána a 2. éjszaka lezárul. [Még nem] [Jöhet a reggel] |
 | Close day | Jöhet a 3. éjszaka? Kivégezve: Anna · Ma senkit sem végeztek ki. [Még nem] [Jöhet az éjszaka] |
-| Reopen | Újranyitod a 2. éjszakát? Ez az éjszaka már lezárult. Ha módosítasz rajta, a későbbi események is megváltozhatnak. [Mégse] [Újranyitás] |
+| Reopen | Újranyitod a 2. éjszakát? / Újranyitod a 2. napot? Ez az éjszaka / Ez a nap már lezárult. Ha módosítasz rajta, a későbbi események is megváltozhatnak. [Mégse] [Újranyitás] |
 | Menu | Szereposztás · Temető · Mesélői napló · Nevek mutatása · Játék befejezése · Kezdőlap |
 | Win | A város nyert! · A gyilkosok nyertek! · A sorozatgyilkos nyert! · A bolond nyert! · Senki sem nyert. |
 | End screen | Játék vége · Krónika · Kép mentése · Vissza a játékhoz |
