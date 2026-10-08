@@ -1,6 +1,8 @@
 import { MotionConfig } from 'motion/react'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useApp } from '@/store/hooks'
 import { SaveFailedBanner } from '@/ui/components/SaveFailedBanner'
+import { UpdateBanner } from '@/ui/components/UpdateBanner'
 import { EndScreen } from '@/ui/screens/end/EndScreen'
 import { GameScreen } from '@/ui/screens/game/GameScreen'
 import { HomeScreen } from '@/ui/screens/HomeScreen'
@@ -12,10 +14,18 @@ export function App() {
   const saveFailed = useApp((s) => s.saveFailed)
   const hasGame = useApp((s) => s.game !== null)
   const ended = useApp((s) => s.game?.ending != null)
+  // Registered here so the worker installs on the first visit; the reload offer stays on Home.
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW()
   return (
     <MotionConfig reducedMotion="user">
       <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
         {saveFailed && <SaveFailedBanner />}
+        {screen === 'home' && needRefresh && (
+          <UpdateBanner onUpdate={() => void updateServiceWorker(true)} />
+        )}
         {screen === 'home' && <HomeScreen />}
         {screen === 'setup' && <SetupScreen />}
         {screen === 'library' && <LibraryScreen />}
