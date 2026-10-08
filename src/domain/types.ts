@@ -52,6 +52,11 @@ export interface Adjustment {
   dead: boolean
 }
 
+export interface Nomination {
+  playerId: string
+  votes: number
+}
+
 export type StepInput =
   | { kind: 'target'; targetId: string | null }
   | { kind: 'vest'; use: boolean }
