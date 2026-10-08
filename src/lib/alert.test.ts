@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireAlert } from './alert'
+import { fireAlert, unlockAudio } from './alert'
 
 const device = () => ({ vibrate: vi.fn(), chime: vi.fn() })
 
@@ -23,5 +23,11 @@ describe('fireAlert', () => {
       throw new Error('Audio is locked')
     })
     expect(() => fireAlert({ sound: true, vibration: true }, { chime })).not.toThrow()
+  })
+})
+
+describe('unlockAudio', () => {
+  it('does nothing where Web Audio is missing', () => {
+    expect(() => unlockAudio()).not.toThrow()
   })
 })

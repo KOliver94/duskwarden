@@ -22,8 +22,10 @@ export function App() {
     updateServiceWorker,
   } = useRegisterSW()
   useEffect(() => {
-    window.addEventListener('pointerdown', unlockAudio)
-    return () => window.removeEventListener('pointerdown', unlockAudio)
+    // A touch counts as a user gesture only once it ends, so pointerup is the one that unlocks on phones.
+    const events = ['pointerdown', 'pointerup'] as const
+    events.forEach((event) => window.addEventListener(event, unlockAudio))
+    return () => events.forEach((event) => window.removeEventListener(event, unlockAudio))
   }, [])
 
   return (

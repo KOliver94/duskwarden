@@ -22,8 +22,13 @@ let audio: AudioContext | null = null
 
 // iOS only starts audio inside a user gesture and suspends it again in the background.
 export function unlockAudio() {
-  audio ??= new AudioContext()
-  if (audio.state !== 'running') void audio.resume()
+  // Safari before 14.5 only has the prefixed constructor.
+  const Context =
+    globalThis.AudioContext ??
+    (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (!Context) return
+  audio ??= new Context()
+  if (audio.state !== 'running') audio.resume().catch(() => {})
 }
 
 function chime() {
