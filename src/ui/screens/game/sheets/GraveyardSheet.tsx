@@ -6,7 +6,7 @@ import type { SheetProps } from '../types'
 
 export function GraveyardSheet({ game, derived, open, onClose }: SheetProps) {
   const { setup } = game
-  const days = graveyard(derived, game.cursor, false)
+  const days = graveyard(derived, game.cursor)
   const empty = days.every((d) => d.entries.length === 0)
 
   return (
@@ -26,7 +26,7 @@ export function GraveyardSheet({ game, derived, open, onClose }: SheetProps) {
                 return (
                   <p key={entry.playerId + entry.cause} className="text-lg">
                     {player.name} – {entry.cause === 'night' ? 'éjjel halt meg' : 'kivégezték'}
-                    {setup.settings.revealRoleOnDeath && (
+                    {entry.revealed && (
                       <span className="text-muted-foreground">
                         {' '}
                         ({setup.roles[player.roleId].name})

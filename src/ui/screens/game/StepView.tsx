@@ -1,10 +1,11 @@
 import { ActionCard } from './cards/ActionCard'
 import { DiscussionCard } from './cards/DiscussionCard'
 import { DuskCard } from './cards/DuskCard'
-import { ExecutionCard } from './cards/ExecutionCard'
 import { KillersMeetCard } from './cards/KillersMeetCard'
 import { MorningCard } from './cards/MorningCard'
 import { TellCard } from './cards/TellCard'
+import { VerdictCard } from './cards/VerdictCard'
+import { VotingCard } from './cards/VotingCard'
 import type { StepProps } from './types'
 
 export function StepView(props: StepProps) {
@@ -22,7 +23,9 @@ export function StepView(props: StepProps) {
       return <MorningCard {...props} />
     case 'discussion':
       return <DiscussionCard {...props} />
-    case 'execution':
-      return <ExecutionCard {...props} />
+    case 'voting':
+      return <VotingCard {...props} />
+    case 'verdict':
+      return <VerdictCard {...props} />
   }
 }

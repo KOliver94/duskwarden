@@ -6,11 +6,13 @@ export function Stepper({
   onChange,
   label,
   min = 0,
+  max,
 }: {
   value: number
   onChange(value: number): void
   label: string
   min?: number
+  max?: number
 }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
@@ -28,6 +30,7 @@ export function Stepper({
         variant="outline"
         size="icon-touch"
         aria-label={`${label} +1`}
+        disabled={max !== undefined && value >= max}
         onClick={() => onChange(value + 1)}
       >
         <Plus />

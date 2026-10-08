@@ -353,7 +353,7 @@ Glossary:
 | Night deaths | Az éjszaka meghalt: · Az éjszaka senki sem halt meg. |
 | Discussion timer | Indítás · Szünet · Újra · Lejárt az idő! Jöhet a szavazás. |
 | Voting | Szavazás · Kit jelöltök kivégzésre? · Jelölt hozzáadása · Még nincs jelölt. · 5 szavazat · Kivégzéshez legalább 4 szavazat kell. |
-| Verdict | Ítélet · Anna kivégzésre kerül. · Döntetlen – ma senkit sem végeznek ki. · Nincs meg a többség – ma senkit sem végeznek ki. · Nem volt jelölt – ma senkit sem végeznek ki. |
+| Verdict | Ítélet · Anna kivégzésre kerül. · Döntetlen – ma senkit sem végeznek ki. · Nincs meg a többség – ma senkit sem végeznek ki. · Legalább 4 szavazat kellett volna. · Nem volt jelölt – ma senkit sem végeznek ki. |
 | Reveal | Szerep felfedése · Szerepe: Orvos |
 | Close night | Kezdődhet a 2. nap? Nézd át, minden éjszakai akció rendben van-e. Utána a 2. éjszaka lezárul. [Még nem] [Jöhet a reggel] |
 | Close day | Jöhet a 3. éjszaka? Kivégezve: Anna · Ma senkit sem végeztek ki. [Még nem] [Jöhet az éjszaka] |

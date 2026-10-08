@@ -24,8 +24,19 @@ function describe(entry: LogEntry, setup: GameSetup, masked: boolean): string {
       return `Támadás → ${n(entry.attack.targetId)}: ${entry.attack.result === 'killed' ? 'meghalt' : 'túlélte'}`
     case 'adjustment':
       return `Mesélői módosítás → ${n(entry.playerId)}: ${entry.dead ? 'halott' : 'él'}`
-    case 'execution':
-      return entry.targetId ? `Kivégzés → ${n(entry.targetId)}` : 'Nem volt kivégzés'
+    case 'nomination':
+      return `Jelölés → ${n(entry.playerId)}: ${entry.votes} szavazat`
+    case 'verdict':
+      switch (entry.tally.outcome) {
+        case 'executed':
+          return `Kivégzés → ${n(entry.tally.playerId)}`
+        case 'tie':
+          return 'Döntetlen – nem volt kivégzés'
+        case 'noMajority':
+          return 'Nincs többség – nem volt kivégzés'
+        case 'none':
+          return 'Nem volt jelölt'
+      }
   }
 }
 

@@ -1,14 +1,25 @@
 import { Sun } from 'lucide-react'
+import { cn } from 'cn'
 import { morningTitle } from '@/domain/copy'
+import { useActions } from '@/store/hooks'
+import { FACTION_TONE } from '@/ui/labels'
 import { playerById } from '@/ui/names'
 import { Button } from '@/ui/primitives/button'
 import { Say, StepCard } from '../StepCard'
 import type { StepProps } from '../types'
 
 export function MorningCard({ step, game, derived, openSheet }: StepProps) {
+  const actions = useActions()
   const { setup } = game
   const day = derived.phases[step.phase].day!
   const addedByGm = new Set(day.adjustments.filter((a) => a.dead).map((a) => a.playerId))
+
+  const reveal = (id: string) =>
+    actions.setInput(step.id, {
+      kind: 'morning',
+      adjustments: day.adjustments,
+      revealed: [...day.revealed.filter((r) => day.announced.includes(r)), id],
+    })
 
   return (
     <StepCard title="Reggel" aside={<Sun className="size-8 text-primary" />}>
@@ -21,12 +32,30 @@ export function MorningCard({ step, game, derived, openSheet }: StepProps) {
           <ul className="flex flex-col gap-2">
             {day.announced.map((id) => {
               const player = playerById(setup, id)
+              const role = setup.roles[player.roleId]
               return (
-                <li key={id} className="rounded-xl bg-blood/15 px-4 py-3 text-lg">
-                  ☠ {player.name}
-                  {setup.settings.revealRoleOnDeath && <> – {setup.roles[player.roleId].name}</>}
-                  {addedByGm.has(id) && (
-                    <span className="text-sm text-muted-foreground"> (mesélői módosítás)</span>
+                <li
+                  key={id}
+                  className="flex min-h-16 items-center gap-3 rounded-xl bg-blood/15 py-1 pr-1 pl-4 text-lg"
+                >
+                  <span className="flex-1">
+                    ☠ {player.name}
+                    {day.revealed.includes(id) && (
+                      <>
+                        {' – '}
+                        <span className={cn('font-semibold', FACTION_TONE[role.faction])}>
+                          {role.name}
+                        </span>
+                      </>
+                    )}
+                    {addedByGm.has(id) && (
+                      <span className="text-sm text-muted-foreground"> (mesélői módosítás)</span>
+                    )}
+                  </span>
+                  {!day.revealed.includes(id) && (
+                    <Button variant="outline" className="h-14 shrink-0" onClick={() => reveal(id)}>
+                      Szerep felfedése
+                    </Button>
                   )}
                 </li>
               )

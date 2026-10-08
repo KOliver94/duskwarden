@@ -100,7 +100,20 @@ test('plays a full game, survives a reload and keeps browser back inside the app
 
   await next(page)
   await next(page)
+
+  // 4 players are alive, so 3 votes are a majority
+  await page.getByRole('button', { name: 'Jelölt hozzáadása' }).click()
   await pick(page, cast.killer)
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: `${cast.killer} szavazatai +1` }).click()
+  }
+  await next(page)
+
+  await expect(page.getByText(`${cast.killer} kivégzésre kerül.`)).toBeVisible()
+  await expect(page.getByText(/Szerepe:/)).toHaveCount(0)
+  await page.getByRole('button', { name: 'Szerep felfedése' }).click()
+  await expect(page.getByText(/Szerepe:\s*Gyilkos/)).toBeVisible()
+
   await next(page)
   await expect(page.getByRole('alertdialog')).toContainText('A város nyert!')
   await page.getByRole('button', { name: 'Játék vége' }).click()

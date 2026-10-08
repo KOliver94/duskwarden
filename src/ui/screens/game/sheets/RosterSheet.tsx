@@ -10,7 +10,7 @@ import type { SheetProps } from '../types'
 function RosterBody({ game, derived }: Pick<SheetProps, 'game' | 'derived'>) {
   const [show, setShow] = useState(false)
   const { setup } = game
-  const alive = new Set(aliveAt(derived, game.cursor, false))
+  const alive = new Set(aliveAt(derived, game.cursor))
   return (
     <div className="flex flex-col gap-4">
       <SwitchRow label="Nevek mutatása" checked={show} onChange={setShow} />

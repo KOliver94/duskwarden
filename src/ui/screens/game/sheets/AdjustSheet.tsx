@@ -16,7 +16,11 @@ export function AdjustSheet({ game, derived, open, onClose }: SheetProps) {
     const rest = day.adjustments.filter((a) => a.playerId !== id)
     const adjustments =
       wantDead === deadAtDayStart ? rest : [...rest, { playerId: id, dead: wantDead }]
-    actions.setInput(stepId(game.cursor.phase, 'morning'), { kind: 'morning', adjustments })
+    actions.setInput(stepId(game.cursor.phase, 'morning'), {
+      kind: 'morning',
+      adjustments,
+      revealed: day.revealed.filter((id) => day.announced.includes(id)),
+    })
   }
 
   return (

@@ -27,7 +27,7 @@ function describe(entry: ChronicleEntry, setup: GameSetup): string {
     case 'died':
       return `${name} – éjjel halt meg`
     case 'executed':
-      return `${name} – kivégezték`
+      return `${name} – kivégezték (${entry.votes} szavazat)`
   }
 }
 
@@ -39,7 +39,7 @@ export function EndScreen() {
   const [exportFailed, setExportFailed] = useState(false)
   const { setup } = game
   const ending = game.ending!
-  const finalAlive = new Set(aliveAt(derived, game.cursor, true))
+  const finalAlive = new Set(aliveAt(derived, game.cursor))
   const soloWinners = individualWinners(setup, derived, game.cursor, [...finalAlive])
   const timeline = chronicle(setup, derived, game.cursor)
   const day = new Date(game.createdAt)

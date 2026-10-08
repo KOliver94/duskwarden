@@ -21,7 +21,7 @@ import { Button } from '@/ui/primitives/button'
 function gameStatus(game: Game): string {
   if (game.ending) return `Vége · ${winnerLabel(game.ending.winner, game.setup.roles)}`
   const derived = deriveGame(game.setup, game.inputs, game.cursor.phase)
-  return `${phaseLabel(game.cursor.phase)} · ${aliveAt(derived, game.cursor, false).length} élő`
+  return `${phaseLabel(game.cursor.phase)} · ${aliveAt(derived, game.cursor).length} élő`
 }
 
 export function HomeScreen() {

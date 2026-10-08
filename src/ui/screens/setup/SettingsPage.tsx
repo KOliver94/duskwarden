@@ -23,11 +23,6 @@ export function SettingsPage({
           onChange={(autoEnd) => set({ autoEnd })}
         />
         <SwitchRow
-          label="Halottak szerepének felfedése"
-          checked={settings.revealRoleOnDeath}
-          onChange={(revealRoleOnDeath) => set({ revealRoleOnDeath })}
-        />
-        <SwitchRow
           label="A bolond győzelmével véget ér a játék"
           checked={settings.jesterWinEndsGame}
           onChange={(jesterWinEndsGame) => set({ jesterWinEndsGame })}

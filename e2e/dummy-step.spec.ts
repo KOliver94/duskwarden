@@ -37,7 +37,7 @@ test('a dead role is called as usual without the death in the read-aloud lines',
   await page.getByRole('button', { name: 'Jöhet a reggel' }).click()
   await next(page)
   await next(page)
-  await page.getByRole('button', { name: 'Senkit' }).click()
+  await next(page)
   await next(page)
   await page.getByRole('button', { name: 'Jöhet az éjszaka' }).click()
   await next(page)
