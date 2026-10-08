@@ -40,7 +40,7 @@ export function EndScreen() {
   const { setup } = game
   const ending = game.ending!
   const finalAlive = new Set(aliveAt(derived, game.cursor, true))
-  const soloWinners = individualWinners(setup, derived, [...finalAlive])
+  const soloWinners = individualWinners(setup, derived, game.cursor, [...finalAlive])
   const timeline = chronicle(setup, derived, game.cursor)
   const day = new Date(game.createdAt)
 

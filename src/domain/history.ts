@@ -133,7 +133,9 @@ export function chronicle(
   return derived.phases
     .map((p) => {
       const entries: ChronicleEntry[] = []
-      for (const attack of p.night?.attacks ?? []) {
+      // A night the game ended in was never resolved; its attacks did not happen.
+      const attacks = p.index < cursor.phase ? (p.night?.attacks ?? []) : []
+      for (const attack of attacks) {
         const saved = entries.some((e) => e.kind === 'saved' && e.playerId === attack.targetId)
         if (attack.result === 'protected' && !saved) {
           const protectors = attack.protectedBy.map((id) => stepRole.get(id))
@@ -171,10 +173,14 @@ export function chronicle(
 export function individualWinners(
   setup: GameSetup,
   derived: DerivedGame,
+  cursor: Cursor,
   finalAlive: string[],
 ): string[] {
+  const { passed } = progress(derived, cursor, true)
   const executed = new Set(
-    derived.phases.flatMap((p) => (p.day?.executedId ? [p.day.executedId] : [])),
+    derived.phases.flatMap((p) =>
+      p.day?.executedId && passed(p.index, stepId(p.index, 'execution')) ? [p.day.executedId] : [],
+    ),
   )
   return setup.players
     .filter((p) => {

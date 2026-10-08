@@ -81,10 +81,26 @@ describe('chronicle', () => {
   })
 })
 
+describe('chronicle of an unfinished night', () => {
+  it('leaves out attacks of the night the game ended in', () => {
+    const k = makeSetup(['killer', 'killer', 'villager'], { killersKnowEachOther: false })
+    const d = deriveGame(k, { 'n1:killer:p1': t('p2') }, 0)
+    expect(chronicle(k, d, at(0, 'n1:killer:p2'))).toEqual([])
+  })
+})
+
 describe('individualWinners', () => {
   it('lists executed jesters and living survivors', () => {
     const n = makeSetup(['killer', 'jester', 'survivor', 'villager'])
     const d = deriveGame(n, { 'd1:execution': { kind: 'execution', targetId: 'p2' } }, 1)
-    expect(individualWinners(n, d, ['p1', 'p3', 'p4'])).toEqual(['p2', 'p3'])
+    expect(individualWinners(n, d, at(1, 'd1:execution'), ['p1', 'p3', 'p4'])).toEqual(['p2', 'p3'])
+  })
+
+  it('ignores an execution the game never reached', () => {
+    const n = makeSetup(['killer', 'jester', 'survivor', 'villager'])
+    const d = deriveGame(n, { 'd1:execution': { kind: 'execution', targetId: 'p2' } }, 1)
+    expect(individualWinners(n, d, at(1, 'd1:discussion'), ['p1', 'p2', 'p3', 'p4'])).toEqual([
+      'p3',
+    ])
   })
 })
