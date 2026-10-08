@@ -15,6 +15,7 @@ export async function bootstrap(dbName?: string) {
     now: () => Date.now(),
     newId,
     requestPersist: () => void navigator.storage?.persist?.(),
+    reopen: () => openDb(dbName),
   }
   try {
     const db = await openDb(dbName)

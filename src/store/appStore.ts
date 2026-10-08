@@ -40,6 +40,7 @@ export interface Deps {
   now(): number
   newId(): string
   requestPersist(): void
+  reopen?(): Promise<Db>
 }
 
 export interface InitialState {
@@ -50,13 +51,30 @@ export interface InitialState {
 }
 
 export function createAppStore(deps: Deps, initial: InitialState) {
-  const requireDb = () => {
-    if (!deps.db) throw new Error('IndexedDB is unavailable')
-    return deps.db
+  let db = deps.db
+  let reopening: Promise<Db> | null = null
+  const reconnect = (stale: Db | null): Promise<Db> => {
+    if (db && db !== stale) return Promise.resolve(db)
+    reopening ??= deps.reopen!()
+      .then((fresh) => (db = fresh))
+      .finally(() => (reopening = null))
+    return reopening
+  }
+  const withDb = async <T>(op: (db: Db) => Promise<T>): Promise<T> => {
+    const current = db
+    if (current) {
+      try {
+        return await op(current)
+      } catch (error) {
+        if (!deps.reopen) throw error
+      }
+    } else if (!deps.reopen) throw new Error('IndexedDB is unavailable')
+    // iOS Safari drops the IndexedDB connection of a backgrounded page; a fresh one recovers.
+    return op(await reconnect(current))
   }
   let report: (ok: boolean) => void = () => {}
   const gameQueue = createWriteQueue<Game>(
-    (game) => repo.saveGame(requireDb(), game),
+    (game) => withDb((db) => repo.saveGame(db, game)),
     (ok) => report(ok),
   )
   const prefQueues = new Map<keyof Prefs, WriteQueue<Prefs[keyof Prefs]>>()
@@ -64,7 +82,7 @@ export function createAppStore(deps: Deps, initial: InitialState) {
     let queue = prefQueues.get(key)
     if (!queue) {
       queue = createWriteQueue(
-        (value) => repo.savePref(requireDb(), key, value),
+        (value) => withDb((db) => repo.savePref(db, key, value)),
         (ok) => report(ok),
       )
       prefQueues.set(key, queue)
@@ -72,14 +90,10 @@ export function createAppStore(deps: Deps, initial: InitialState) {
     return queue
   }
   const writeNow = (op: (db: Db) => Promise<unknown>) =>
-    void (async () => {
-      try {
-        await op(requireDb())
-        report(true)
-      } catch {
-        report(false)
-      }
-    })()
+    void withDb(op).then(
+      () => report(true),
+      () => report(false),
+    )
 
   const store = createStore<App>()((set, get) => {
     const patchGame = (patch: (game: Game) => Partial<Game>) => {

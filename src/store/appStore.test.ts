@@ -113,6 +113,29 @@ describe('app store', () => {
     expect(restored.game?.id).toBe('g1')
   })
 
+  it('reopens a lost database connection and keeps saving', async () => {
+    const name = `test-${crypto.randomUUID()}`
+    const db = await openDb(name)
+    const store = createAppStore(
+      {
+        db,
+        now: () => 1000,
+        newId: () => 'g1',
+        requestPersist: () => {},
+        reopen: () => openDb(name),
+      },
+      { game: null, customRoles: [witch], prefs: DEFAULT_PREFS },
+    )
+    store.getState().startGame(draft, players, ['witch', 'killer'])
+    await store.getState().flush()
+    db.close()
+    store.getState().setInput('n1:killer', { kind: 'target', targetId: 'b' })
+    await store.getState().flush()
+    expect(store.getState().saveFailed).toBe(false)
+    const stored = await loadGame(await openDb(name), 'g1')
+    expect(stored?.inputs['n1:killer']).toEqual({ kind: 'target', targetId: 'b' })
+  })
+
   it('flags failed saves and keeps playing in memory', async () => {
     const { store, start } = await setup({ db: null })
     start()
