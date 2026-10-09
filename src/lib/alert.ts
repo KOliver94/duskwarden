@@ -4,18 +4,28 @@ export interface AlertPrefs {
 }
 
 export interface AlertDevice {
-  vibrate?(pattern: number[]): void
+  vibrate?(pattern: number[]): boolean
   chime(): void
 }
 
-export function fireAlert(prefs: AlertPrefs, device: AlertDevice) {
-  if (prefs.vibration) device.vibrate?.([200, 100, 200])
-  if (!prefs.sound) return
-  try {
-    device.chime()
-  } catch {
-    // Audio stays locked until the first tap; the pulsing timer still signals expiry.
+export type VibrationResult = 'off' | 'unsupported' | 'blocked' | 'sent'
+
+export function fireAlert(prefs: AlertPrefs, device: AlertDevice): VibrationResult {
+  const vibration: VibrationResult = !prefs.vibration
+    ? 'off'
+    : !device.vibrate
+      ? 'unsupported'
+      : device.vibrate([200, 100, 200])
+        ? 'sent'
+        : 'blocked'
+  if (prefs.sound) {
+    try {
+      device.chime()
+    } catch {
+      // Audio stays locked until the first tap; the pulsing timer still signals expiry.
+    }
   }
+  return vibration
 }
 
 let audio: AudioContext | null = null
@@ -52,8 +62,8 @@ function chime() {
 export const canVibrate = () => typeof navigator !== 'undefined' && 'vibrate' in navigator
 
 export const browserDevice: AlertDevice = {
-  vibrate: (pattern) => {
-    if (canVibrate()) navigator.vibrate(pattern)
+  get vibrate() {
+    return canVibrate() ? (pattern: number[]) => navigator.vibrate(pattern) : undefined
   },
   chime,
 }

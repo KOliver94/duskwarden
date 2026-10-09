@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireAlert, unlockAudio } from './alert'
 
-const device = () => ({ vibrate: vi.fn(), chime: vi.fn() })
+const device = (accepted = true) => ({ vibrate: vi.fn(() => accepted), chime: vi.fn() })
 
 describe('fireAlert', () => {
   it('vibrates and chimes when both are on', () => {
@@ -23,6 +23,24 @@ describe('fireAlert', () => {
       throw new Error('Audio is locked')
     })
     expect(() => fireAlert({ sound: true, vibration: true }, { chime })).not.toThrow()
+  })
+})
+
+describe('fireAlert result', () => {
+  it('reports a vibration the browser accepted', () => {
+    expect(fireAlert({ sound: false, vibration: true }, device(true))).toBe('sent')
+  })
+
+  it('reports a vibration the browser refused', () => {
+    expect(fireAlert({ sound: false, vibration: true }, device(false))).toBe('blocked')
+  })
+
+  it('reports a device without vibration', () => {
+    expect(fireAlert({ sound: false, vibration: true }, { chime: vi.fn() })).toBe('unsupported')
+  })
+
+  it('reports vibration switched off', () => {
+    expect(fireAlert({ sound: true, vibration: false }, device())).toBe('off')
   })
 })
 
