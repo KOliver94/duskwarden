@@ -23,9 +23,9 @@ Success: a full real game is run from the phone without paper notes, without the
 
 ## 2. Scope
 
-In: game setup, role library with custom roles, night order drag-and-drop, step-by-step night/day wizard, night resolution, win detection, back navigation and reopening closed phases, public and detailed histories, end screen with image export, continuous persistence, offline PWA.
+In: game setup, role library with custom roles, night order drag-and-drop, step-by-step night/day wizard, night resolution, nominations and recorded votes, win detection, back navigation and reopening closed phases, public and detailed histories, end screen with image export, continuous persistence, offline PWA.
 
-Out: multiple devices or sync, player-facing views, replaying old games, vote tallying, i18n (Hungarian only), light theme, deploy pipeline (added later with the GitHub remote), complex ToS mechanics (roleblock, framing, Jester haunt, night immunity).
+Out: multiple devices or sync, player-facing views, replaying old games, i18n (Hungarian only), light theme, complex ToS mechanics (roleblock, framing, Jester haunt, night immunity).
 
 ## 3. Stack
 
@@ -38,7 +38,7 @@ Out: multiple devices or sync, player-facing views, replaying old games, vote ta
 - `vite-plugin-pwa` (generateSW), `@vite-pwa/assets-generator` for icons
 - `html-to-image` for end screen export
 - `@fontsource/*` self-hosted fonts
-- Vitest (+ `fake-indexeddb`), Playwright for one e2e smoke test
+- Vitest (+ `fake-indexeddb`), Playwright for end-to-end tests
 
 No router. The visible screen is derived from state; browser history is only used as a back-button guard (§7).
 
@@ -302,8 +302,8 @@ Writes:
 - generateSW precaches the whole build, fonts included. The app runs offline after the first load.
 - Update prompt is shown only on Home; a new version never reloads the app mid-game.
 - Manifest: name Duskwarden, `display: standalone`, `orientation: portrait`, dark theme and background colors. Icons generated from one SVG.
-- Hosted on Cloudflare Workers static assets: `wrangler.jsonc` serves `./dist`, `public/_headers` makes `sw.js` and `index.html` always revalidate so a cached service worker never blocks updates, and `pnpm deploy:cloudflare` builds and deploys (plain `deploy` collides with pnpm's built-in command).
-- Vite `base` still comes from an env variable for serving from a subpath.
+- Hosted on Cloudflare Workers static assets: `wrangler.jsonc` serves `./dist`, `public/_headers` makes `sw.js` and `index.html` always revalidate so a cached service worker never blocks updates, and `pnpm deploy:cloudflare` builds and deploys by hand (plain `deploy` collides with pnpm's built-in command).
+- Workers Builds deploys `main` on every push. `.node-version` and the `packageManager` field pin Node and pnpm, so a rebuild years later uses the same toolchain as the lockfile.
 
 ## 10. Hungarian copy
 
@@ -385,5 +385,5 @@ src/ui/        shadcn components, screens (home, setup, library, game, end), ste
 
 - Engine developed test-first with Vitest: step derivation, resolution, constraints, vote tally, reveal validity, win checks, navigation, reopening and invalidation, history derivation, Hungarian article and plural helpers.
 - Repositories and the write queue tested against `fake-indexeddb`.
-- Playwright: a 5-player smoke test (setup, voting, role reveal, play to the end screen, reload mid-night restores the exact step, browser back stays in the app) and a dead-role test (the read-aloud lines never mention the death).
+- Playwright: a 5-player smoke test (setup, voting, role reveal, play to the end screen, reload mid-night restores the exact step, browser back stays in the app), a dead-role test (the read-aloud lines never mention the death), an alerts test (night countdowns stay silent, the discussion countdown alerts) and a voting layout test (long names at 375 px).
 - Manual verification in a mobile viewport.
