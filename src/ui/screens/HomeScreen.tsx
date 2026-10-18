@@ -68,6 +68,9 @@ export function HomeScreen() {
           <Button size="touch" variant="ghost" onClick={() => actions.goto('library')}>
             Szerepek
           </Button>
+          <Button size="touch" variant="ghost" onClick={() => void actions.openArchive()}>
+            Korábbi játékok
+          </Button>
           <Button size="touch" variant="ghost" onClick={() => setSettingsOpen(true)}>
             Beállítások
           </Button>

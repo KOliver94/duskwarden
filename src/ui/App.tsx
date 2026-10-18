@@ -5,6 +5,7 @@ import { unlockAudio } from '@/lib/alert'
 import { useApp } from '@/store/hooks'
 import { SaveFailedBanner } from '@/ui/components/SaveFailedBanner'
 import { UpdateBanner } from '@/ui/components/UpdateBanner'
+import { ArchiveScreen } from '@/ui/screens/archive/ArchiveScreen'
 import { EndScreen } from '@/ui/screens/end/EndScreen'
 import { GameScreen } from '@/ui/screens/game/GameScreen'
 import { HomeScreen } from '@/ui/screens/HomeScreen'
@@ -38,6 +39,7 @@ export function App() {
         {screen === 'home' && <HomeScreen />}
         {screen === 'setup' && <SetupScreen />}
         {screen === 'library' && <LibraryScreen />}
+        {screen === 'archive' && <ArchiveScreen />}
         {screen === 'game' && hasGame && !ended && <GameScreen />}
         {screen === 'game' && hasGame && ended && <EndScreen />}
         {screen === 'game' && !hasGame && <HomeScreen />}

@@ -23,9 +23,9 @@ Success: a full real game is run from the phone without paper notes, without the
 
 ## 2. Scope
 
-In: game setup, role library with custom roles, night order drag-and-drop, step-by-step night/day wizard, night resolution, nominations and recorded votes, win detection, back navigation and reopening closed phases, public and detailed histories, end screen with image export, continuous persistence, offline PWA.
+In: game setup, role library with custom roles, night order drag-and-drop, step-by-step night/day wizard, night resolution, nominations and recorded votes, win detection, back navigation and reopening closed phases, public and detailed histories, end screen with image export, read-only past games with deletion, continuous persistence, offline PWA.
 
-Out: multiple devices or sync, player-facing views, replaying old games, i18n (Hungarian only), light theme, complex ToS mechanics (roleblock, framing, Jester haunt, night immunity).
+Out: multiple devices or sync, player-facing views, resuming or editing past games, i18n (Hungarian only), light theme, complex ToS mechanics (roleblock, framing, Jester haunt, night immunity).
 
 ## 3. Stack
 
@@ -234,6 +234,7 @@ The GM can end the game from the menu at any time, picking the winner. Ending is
 - "Játék folytatása", shown when there is an active or ended game, with a status like "2. éjszaka · 7 élő" or "Vége".
 - "Új játék". If a game is running: a warning dialog, then a hold-to-confirm button (~2 s press). An ended game needs no confirmation.
 - "Szerepek": the role library. Built-ins are view-only; custom roles can be created, edited and deleted.
+- "Korábbi játékok": the past games (see below).
 - "Beállítások": the app settings sheet (§7).
 
 ### Setup wizard
@@ -262,7 +263,14 @@ Prefilled from the last game.
 - Player table: name, role, alive/dead, individual wins.
 - Krónika: per phase deaths, executions and notable events (saves, a killer killing a killer, survivor vest saves).
 - "Kép mentése": PNG via Web Share API when files can be shared, download otherwise.
+- "Mesélői napló": the narrator log sheet, names shown by default since nothing is secret any more.
 - "Vissza a játékhoz", "Új játék".
+
+### Past games
+
+- Every stored game except the active one, newest first: outcome (winner, or "Félbehagyva" for a game left by starting a new one), start date and time, player count. Loaded when the list opens, never at boot.
+- Opening one shows the end screen read-only: no confetti, no "Vissza a játékhoz" or "Új játék"; an unfinished game is titled "Félbehagyott játék" and has no winners.
+- A game can be deleted from its row or its view (confirm dialog). "Összes törlése" deletes every listed game behind a hold-to-confirm button; the active game is never deleted.
 
 ## 6. Hidden information
 
@@ -385,5 +393,5 @@ src/ui/        shadcn components, screens (home, setup, library, game, end), ste
 
 - Engine developed test-first with Vitest: step derivation, resolution, constraints, vote tally, reveal validity, win checks, navigation, reopening and invalidation, history derivation, Hungarian article and plural helpers.
 - Repositories and the write queue tested against `fake-indexeddb`.
-- Playwright: a 5-player smoke test (setup, voting, role reveal, play to the end screen, reload mid-night restores the exact step, browser back stays in the app), a dead-role test (the read-aloud lines never mention the death), an alerts test (night countdowns stay silent, the discussion countdown alerts) and a voting layout test (long names at 375 px).
+- Playwright: a 5-player smoke test (setup, voting, role reveal, play to the end screen, reload mid-night restores the exact step, browser back stays in the app), a dead-role test (the read-aloud lines never mention the death), an alerts test (night countdowns stay silent, the discussion countdown alerts), a voting layout test (long names at 375 px) and a past games test (open a finished game read-only, back out, delete it).
 - Manual verification in a mobile viewport.
