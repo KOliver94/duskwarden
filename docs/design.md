@@ -292,7 +292,7 @@ Timers: `Record<stepId, { startedAt: number | null; accumulatedMs: number }>`, s
 
 Writes:
 
-- Every store change writes the whole game record (a few KB). Writes go through one serialized queue that coalesces to the latest state, so writes never land out of order.
+- Every store change writes the whole game record (a few KB). Each game has its own serialized queue that coalesces to its latest state, so writes never land out of order and starting a new game never drops the last change of the previous one.
 - Writes start immediately (no debounce), so at most one coalesced write is ever pending when the page is hidden or killed.
 - `navigator.storage.persist()` is requested when the first game starts.
 - On boot the active game is loaded before the first render, so a reload never flashes Home.

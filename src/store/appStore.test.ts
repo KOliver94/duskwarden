@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { BUILT_IN_ORDER, rolesById } from '@/domain/roles'
 import { DEFAULT_SETTINGS, type SetupDraft } from '@/domain/setup'
 import type { Player, RoleDef } from '@/domain/types'
@@ -150,5 +150,50 @@ describe('app store', () => {
     await store.getState().flush()
     expect(store.getState().saveFailed).toBe(true)
     expect(store.getState().game?.id).toBe('g1')
+  })
+})
+
+describe('past games', () => {
+  async function playThree() {
+    let n = 0
+    const ctx = await setup({ newId: () => `g${++n}` })
+    ctx.start()
+    ctx.store.getState().endGame('town', false)
+    ctx.tick(1000)
+    ctx.start()
+    ctx.tick(1000)
+    ctx.start()
+    await ctx.store.getState().flush()
+    await ctx.store.getState().openArchive()
+    return ctx
+  }
+  const ids = (games: { id: string }[] | null) => games?.map((g) => g.id)
+
+  it('lists finished and abandoned games newest first, without the active one', async () => {
+    const { store } = await playThree()
+    const { screen, archive, game } = store.getState()
+    expect(screen).toBe('archive')
+    expect(game?.id).toBe('g3')
+    expect(ids(archive)).toEqual(['g2', 'g1'])
+    expect(archive![1].ending?.winner).toBe('town')
+  })
+
+  it('deletes a past game and leaves the view', async () => {
+    const { db, store } = await playThree()
+    store.getState().viewGame('g1')
+    store.getState().deleteGame('g1')
+    expect(ids(store.getState().archive)).toEqual(['g2'])
+    expect(store.getState().viewingId).toBeNull()
+    await vi.waitFor(async () => expect(await loadGame(db, 'g1')).toBeUndefined())
+    expect(await loadGame(db, 'g2')).toBeDefined()
+  })
+
+  it('deletes every past game but keeps the active one', async () => {
+    const { db, store } = await playThree()
+    store.getState().deleteArchive()
+    expect(store.getState().archive).toEqual([])
+    await vi.waitFor(async () => expect(await loadGame(db, 'g2')).toBeUndefined())
+    expect(await loadGame(db, 'g1')).toBeUndefined()
+    expect(await loadGame(db, 'g3')).toBeDefined()
   })
 })

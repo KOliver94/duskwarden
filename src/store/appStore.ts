@@ -9,11 +9,13 @@ import type { Db, Prefs } from '@/storage/db'
 import * as repo from '@/storage/repo'
 import { createWriteQueue, type WriteQueue } from '@/storage/writeQueue'
 
-export type Screen = 'home' | 'setup' | 'library' | 'game'
+export type Screen = 'home' | 'setup' | 'library' | 'game' | 'archive'
 
 export interface AppState {
   screen: Screen
   game: Game | null
+  archive: Game[] | null
+  viewingId: string | null
   customRoles: RoleDef[]
   prefs: Prefs
   saveFailed: boolean
@@ -30,6 +32,10 @@ export interface AppActions {
   timer(stepId: string, op: 'start' | 'pause' | 'reset'): void
   endGame(winner: Winner, manual: boolean): void
   resumeGame(): void
+  openArchive(): Promise<void>
+  viewGame(id: string | null): void
+  deleteGame(id: string): void
+  deleteArchive(): void
   saveCustomRole(role: RoleDef): void
   deleteCustomRole(id: string): void
   flush(): Promise<void>
@@ -75,10 +81,19 @@ export function createAppStore(deps: Deps, initial: InitialState) {
     return op(await reconnect(current))
   }
   let report: (ok: boolean) => void = () => {}
-  const gameQueue = createWriteQueue<Game>(
-    (game) => withDb((db) => repo.saveGame(db, game)),
-    (ok) => report(ok),
-  )
+  // Coalescing across games would drop the last change of a game when the next one starts.
+  const gameQueues = new Map<string, WriteQueue<Game>>()
+  const gameQueue = (id: string) => {
+    let queue = gameQueues.get(id)
+    if (!queue) {
+      queue = createWriteQueue<Game>(
+        (game) => withDb((db) => repo.saveGame(db, game)),
+        (ok) => report(ok),
+      )
+      gameQueues.set(id, queue)
+    }
+    return queue
+  }
   const prefQueues = new Map<keyof Prefs, WriteQueue<Prefs[keyof Prefs]>>()
   const prefQueue = (key: keyof Prefs) => {
     let queue = prefQueues.get(key)
@@ -107,6 +122,8 @@ export function createAppStore(deps: Deps, initial: InitialState) {
     return {
       screen: initial.game ? 'game' : 'home',
       game: initial.game,
+      archive: null,
+      viewingId: null,
       customRoles: initial.customRoles,
       prefs: initial.prefs,
       saveFailed: initial.saveFailed ?? false,
@@ -173,6 +190,29 @@ export function createAppStore(deps: Deps, initial: InitialState) {
         patchGame((g) => ({ ending: { winner, manual, phase: g.cursor.phase } })),
       resumeGame: () => patchGame(() => ({ ending: null })),
 
+      openArchive: async () => {
+        set({ screen: 'archive', archive: null, viewingId: null })
+        const games = await withDb(repo.loadGames).catch(() => [])
+        const activeId = get().game?.id
+        set({
+          archive: games.filter((g) => g.id !== activeId).sort((a, b) => b.createdAt - a.createdAt),
+        })
+      },
+      viewGame: (id) => set({ viewingId: id }),
+      deleteGame: (id) => {
+        const { archive, viewingId } = get()
+        set({
+          archive: archive && archive.filter((g) => g.id !== id),
+          viewingId: viewingId === id ? null : viewingId,
+        })
+        writeNow((db) => repo.deleteGames(db, [id]))
+      },
+      deleteArchive: () => {
+        const ids = (get().archive ?? []).map((g) => g.id)
+        set({ archive: [], viewingId: null })
+        writeNow((db) => repo.deleteGames(db, ids))
+      },
+
       saveCustomRole: (role) => {
         set({ customRoles: [...get().customRoles.filter((r) => r.id !== role.id), role] })
         writeNow((db) => repo.saveCustomRole(db, role))
@@ -182,7 +222,7 @@ export function createAppStore(deps: Deps, initial: InitialState) {
         writeNow((db) => repo.deleteCustomRole(db, id))
       },
       flush: async () => {
-        await Promise.all([gameQueue.flush(), ...[...prefQueues.values()].map((q) => q.flush())])
+        await Promise.all([...gameQueues.values(), ...prefQueues.values()].map((q) => q.flush()))
       },
     }
   })
@@ -192,7 +232,7 @@ export function createAppStore(deps: Deps, initial: InitialState) {
   }
 
   store.subscribe((state, prev) => {
-    if (state.game && state.game !== prev.game) gameQueue.push(state.game)
+    if (state.game && state.game !== prev.game) gameQueue(state.game.id).push(state.game)
     for (const key of Object.keys(state.prefs) as (keyof Prefs)[]) {
       if (state.prefs[key] !== prev.prefs[key]) prefQueue(key).push(state.prefs[key])
     }

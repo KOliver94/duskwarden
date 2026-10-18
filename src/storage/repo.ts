@@ -25,6 +25,11 @@ export const savePref = <K extends keyof Prefs>(db: Db, key: K, value: Prefs[K])
 
 export const loadGame = (db: Db, id: string) => db.get('games', id)
 export const saveGame = (db: Db, game: Game) => db.put('games', game)
+export const loadGames = (db: Db) => db.getAll('games')
+export async function deleteGames(db: Db, ids: string[]) {
+  const tx = db.transaction('games', 'readwrite')
+  await Promise.all([...ids.map((id) => tx.store.delete(id)), tx.done])
+}
 export const loadCustomRoles = (db: Db) => db.getAll('customRoles')
 export const saveCustomRole = (db: Db, role: RoleDef) => db.put('customRoles', role)
 export const deleteCustomRole = (db: Db, id: string) => db.delete('customRoles', id)
