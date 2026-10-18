@@ -13,7 +13,10 @@ export function checkWin(
   const killers = living.filter((r) => r.faction === 'killers').length
   const solo = living.filter((r) => r.neutralGoal === 'soloKiller')
   if (killers === 0 && solo.length === 0) return 'town'
-  if (solo.length === 0 && killers >= alive.length - killers) return 'killers'
+  const others = alive.length - killers
+  // Killers who do not know each other may still execute or kill one another.
+  const decided = setup.settings.killersKnowEachOther || killers === 1 || others === 0
+  if (solo.length === 0 && killers >= others && decided) return 'killers'
   if (killers === 0 && alive.length - solo.length <= 1) return { roleId: solo[0].id }
   if (executedId && setup.settings.jesterWinEndsGame) {
     const executed = roleOf(setup, executedId)

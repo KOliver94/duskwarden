@@ -21,6 +21,16 @@ describe('checkWin', () => {
     expect(checkWin(s, ['p1', 'p2'], null)).toBeNull()
   })
 
+  it('waits for killers who do not know each other to be alone', () => {
+    const team = ['killer', 'killer', 'doctor', 'villager']
+    const unknown = makeSetup(team, { killersKnowEachOther: false })
+    expect(checkWin(makeSetup(team), ['p1', 'p2', 'p3', 'p4'], null)).toBe('killers')
+    expect(checkWin(unknown, ['p1', 'p2', 'p3', 'p4'], null)).toBeNull()
+    expect(checkWin(unknown, ['p1', 'p2', 'p3'], null)).toBeNull()
+    expect(checkWin(unknown, ['p1', 'p2'], null)).toBe('killers')
+    expect(checkWin(unknown, ['p1', 'p3'], null)).toBe('killers')
+  })
+
   it('lets the serial killer win with at most one other survivor', () => {
     expect(checkWin(s, ['p2', 'p3'], null)).toEqual({ roleId: 'serialKiller' })
     expect(checkWin(s, ['p2', 'p3', 'p4'], null)).toBeNull()

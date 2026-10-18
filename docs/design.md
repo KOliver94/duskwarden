@@ -215,7 +215,7 @@ Checked when leaving the morning step and when leaving the verdict step. Conditi
 - Hostile = faction `killers`, or neutral goal `soloKiller`.
 - Nobody: all players dead.
 - Town: no living hostiles.
-- Killers: no living soloKillers, and living killers ≥ all other living players.
+- Killers: no living soloKillers, and living killers ≥ all other living players. If killers don't know each other and more than one is alive, only once nobody else is alive: until then they may still execute or kill one another.
 - Serial killer: no living killers, and at most one living non-soloKiller player.
 - Jester: executed, and only if `jesterWinEndsGame`.
 - Survivors alive at the end are co-winners. An executed Jester is always listed as an individual winner, even if the game continued.
