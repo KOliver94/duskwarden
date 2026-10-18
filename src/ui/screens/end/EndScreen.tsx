@@ -13,6 +13,7 @@ import { useBackGuard } from '@/ui/hooks/useBackGuard'
 import { FACTION_TONE } from '@/ui/labels'
 import { playerById } from '@/ui/names'
 import { Button } from '@/ui/primitives/button'
+import { NarratorLogSheet } from '../game/sheets/NarratorLogSheet'
 
 function describe(entry: ChronicleEntry, setup: GameSetup): string {
   if (entry.kind === 'noExecution') return 'Senkit sem végeztek ki.'
@@ -37,6 +38,7 @@ export function EndScreen() {
   const card = useRef<HTMLDivElement>(null)
   const [exporting, setExporting] = useState(false)
   const [exportFailed, setExportFailed] = useState(false)
+  const [logOpen, setLogOpen] = useState(false)
   const { setup } = game
   const ending = game.ending!
   const finalAlive = new Set(aliveAt(derived, game.cursor))
@@ -44,7 +46,7 @@ export function EndScreen() {
   const timeline = chronicle(setup, derived, game.cursor)
   const day = new Date(game.createdAt)
 
-  useBackGuard(() => {})
+  useBackGuard(() => setLogOpen(false))
 
   useEffect(() => {
     if (ending.winner === 'nobody') return
@@ -142,6 +144,9 @@ export function EndScreen() {
             Nem sikerült a képet elkészíteni.
           </p>
         )}
+        <Button size="touch" variant="outline" onClick={() => setLogOpen(true)}>
+          Mesélői napló
+        </Button>
         <Button size="touch" variant="secondary" onClick={actions.resumeGame}>
           Vissza a játékhoz
         </Button>
@@ -154,6 +159,13 @@ export function EndScreen() {
           </Button>
         </div>
       </div>
+
+      <NarratorLogSheet
+        game={game}
+        derived={derived}
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+      />
     </main>
   )
 }

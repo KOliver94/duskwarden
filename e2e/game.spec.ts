@@ -127,4 +127,10 @@ test('plays a full game, survives a reload and keeps browser back inside the app
   await page.getByRole('button', { name: 'Játék vége' }).click()
   await expect(page.getByText('A város nyert!')).toBeVisible()
   await expect(page.getByText('Krónika')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Mesélői napló' }).click()
+  await expect(page.getByRole('dialog', { name: 'Mesélői napló' })).toContainText('Kivégzés →')
+  await page.goBack()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByText('Krónika')).toBeVisible()
 })
