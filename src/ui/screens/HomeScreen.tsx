@@ -1,4 +1,4 @@
-import { MoonStar } from 'lucide-react'
+import { ExternalLink, MoonStar } from 'lucide-react'
 import { useState } from 'react'
 import { phaseLabel, winnerLabel } from '@/domain/copy'
 import { deriveGame } from '@/domain/derive'
@@ -51,23 +51,37 @@ export function HomeScreen() {
         <p className="text-muted-foreground">Mesélői segéd</p>
       </header>
 
-      <nav className="flex flex-col gap-3">
-        {game && (
-          <Button className="h-18 flex-col gap-0.5 rounded-xl" onClick={() => actions.goto('game')}>
-            <span className="text-lg">Játék folytatása</span>
-            <span className="text-sm font-normal opacity-80">{gameStatus(game)}</span>
+      <div className="flex flex-col gap-6">
+        <nav className="flex flex-col gap-3">
+          {game && (
+            <Button
+              className="h-18 flex-col gap-0.5 rounded-xl"
+              onClick={() => actions.goto('game')}
+            >
+              <span className="text-lg">Játék folytatása</span>
+              <span className="text-sm font-normal opacity-80">{gameStatus(game)}</span>
+            </Button>
+          )}
+          <Button size="touch" variant={game ? 'secondary' : 'default'} onClick={newGame}>
+            Új játék
           </Button>
-        )}
-        <Button size="touch" variant={game ? 'secondary' : 'default'} onClick={newGame}>
-          Új játék
-        </Button>
-        <Button size="touch" variant="ghost" onClick={() => actions.goto('library')}>
-          Szerepek
-        </Button>
-        <Button size="touch" variant="ghost" onClick={() => setSettingsOpen(true)}>
-          Beállítások
-        </Button>
-      </nav>
+          <Button size="touch" variant="ghost" onClick={() => actions.goto('library')}>
+            Szerepek
+          </Button>
+          <Button size="touch" variant="ghost" onClick={() => setSettingsOpen(true)}>
+            Beállítások
+          </Button>
+        </nav>
+        <a
+          href="https://github.com/KOliver94/duskwarden/issues"
+          target="_blank"
+          rel="noreferrer"
+          className="flex min-h-12 items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Hibát találtál? Írd meg a GitHubon!
+          <ExternalLink className="size-4" />
+        </a>
+      </div>
 
       {confirm.dialog}
       <AppSettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
