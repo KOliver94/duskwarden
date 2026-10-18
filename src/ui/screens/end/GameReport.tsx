@@ -74,7 +74,7 @@ export function GameReport({
             <p className="text-sm tracking-[0.3em] text-muted-foreground uppercase">Játék vége</p>
           )}
           <h1 className="font-display text-4xl leading-tight text-primary">
-            {ending ? winnerLabel(ending.winner, setup.roles) : 'Félbehagyott játék'}
+            {winnerLabel(ending?.winner ?? null, setup.roles)}
           </h1>
           {soloWinners.length > 0 && (
             <p className="text-muted-foreground">

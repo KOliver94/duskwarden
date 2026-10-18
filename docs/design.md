@@ -268,8 +268,8 @@ Prefilled from the last game.
 
 ### Past games
 
-- Every stored game except the active one, newest first: outcome (winner, or "Félbehagyva" for a game left by starting a new one), start date and time, player count. Loaded when the list opens, never at boot.
-- Opening one shows the end screen read-only: no confetti, no "Vissza a játékhoz" or "Új játék"; an unfinished game is titled "Félbehagyott játék" and has no winners.
+- Every stored game except the active one, newest first: outcome (winner, or "A játék félbemaradt." for a game left by starting a new one), start date and time, player count. Loaded when the list opens, never at boot.
+- Opening one shows the end screen read-only: no confetti, no "Vissza a játékhoz" or "Új játék"; an unfinished game is titled "A játék félbemaradt." and has no winners.
 - A game can be deleted from its row or its view (confirm dialog). "Összes törlése" deletes every listed game behind a hold-to-confirm button; the active game is never deleted.
 
 ## 6. Hidden information
@@ -367,7 +367,7 @@ Glossary:
 | Close day | Jöhet a 3. éjszaka? Kivégezve: Anna · Ma senkit sem végeztek ki. [Még nem] [Jöhet az éjszaka] |
 | Reopen | Újranyitod a 2. éjszakát? / Újranyitod a 2. napot? Ez az éjszaka / Ez a nap már lezárult. Ha módosítasz rajta, a későbbi események is megváltozhatnak. [Mégse] [Újranyitás] |
 | Menu | Szereposztás · Temető · Mesélői napló · Nevek mutatása · Játék befejezése · Kezdőlap |
-| Win | A város nyert! · A gyilkosok nyertek! · A sorozatgyilkos nyert! · A bolond nyert! · Senki sem nyert. |
+| Win | A város nyert! · A gyilkosok nyertek! · A sorozatgyilkos nyert! · A bolond nyert! · Senki sem nyert. · A játék félbemaradt. |
 | End screen | Játék vége · Krónika · Kép mentése · Vissza a játékhoz · Anna – kivégezték (5 szavazat) |
 | Narrator log, day | Jelölés → Anna: 5 szavazat · Kivégzés → Anna · Döntetlen – nem volt kivégzés · Nincs többség – nem volt kivégzés · Nem volt jelölt |
 

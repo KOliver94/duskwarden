@@ -99,4 +99,8 @@ describe('winnerLabel', () => {
     expect(winnerLabel({ roleId: 'serialKiller' }, ROLES)).toBe('A sorozatgyilkos nyert!')
     expect(winnerLabel({ roleId: 'jester' }, ROLES)).toBe('A bolond nyert!')
   })
+
+  it('reads an unfinished game as a sentence like the outcomes', () => {
+    expect(winnerLabel(null, ROLES)).toBe('A játék félbemaradt.')
+  })
 })

@@ -24,7 +24,7 @@ const startedAt = (game: Game) =>
   new Date(game.createdAt).toLocaleString('hu-HU', { dateStyle: 'medium', timeStyle: 'short' })
 
 const deleteRequest = (onConfirm: () => void): ConfirmRequest => ({
-  title: 'Törlöd ezt a játékot?',
+  title: 'Biztosan törlöd ezt a játékot?',
   body: 'Nem lehet visszaállítani.',
   cancelLabel: 'Mégse',
   confirmLabel: 'Törlés',
@@ -64,9 +64,7 @@ function ArchiveList({ games }: { games: Game[] | null }) {
                     className="flex min-h-16 flex-1 flex-col justify-center gap-0.5 py-2 pl-4 text-left"
                   >
                     <span className="font-medium">
-                      {game.ending
-                        ? winnerLabel(game.ending.winner, game.setup.roles)
-                        : 'Félbehagyva'}
+                      {winnerLabel(game.ending?.winner ?? null, game.setup.roles)}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {startedAt(game)} · {game.setup.players.length} játékos

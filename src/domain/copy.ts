@@ -77,7 +77,8 @@ export function reasonText(reason: DisabledReason, action: ActionKind): string {
   }
 }
 
-export function winnerLabel(winner: Winner, roles: Record<string, RoleDef>): string {
+export function winnerLabel(winner: Winner | null, roles: Record<string, RoleDef>): string {
+  if (winner === null) return 'A játék félbemaradt.'
   if (winner === 'town') return 'A város nyert!'
   if (winner === 'killers') return 'A gyilkosok nyertek!'
   if (winner === 'nobody') return 'Senki sem nyert.'
