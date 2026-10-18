@@ -164,6 +164,7 @@ export function EndScreen() {
         game={game}
         derived={derived}
         open={logOpen}
+        showNames
         onClose={() => setLogOpen(false)}
       />
     </main>

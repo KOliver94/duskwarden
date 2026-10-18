@@ -40,8 +40,12 @@ function describe(entry: LogEntry, setup: GameSetup, masked: boolean): string {
   }
 }
 
-function LogBody({ game, derived }: Pick<SheetProps, 'game' | 'derived'>) {
-  const [show, setShow] = useState(false)
+function LogBody({
+  game,
+  derived,
+  showNames,
+}: Pick<SheetProps, 'game' | 'derived'> & { showNames: boolean }) {
+  const [show, setShow] = useState(showNames)
   const phases = narratorLog(game.setup, derived, game.cursor, false)
   return (
     <div className="flex flex-col gap-5">
@@ -61,10 +65,15 @@ function LogBody({ game, derived }: Pick<SheetProps, 'game' | 'derived'>) {
   )
 }
 
-export function NarratorLogSheet({ open, onClose, ...props }: SheetProps) {
+export function NarratorLogSheet({
+  open,
+  onClose,
+  showNames = false,
+  ...props
+}: SheetProps & { showNames?: boolean }) {
   return (
     <BottomSheet open={open} onClose={onClose} title="Mesélői napló">
-      <LogBody {...props} />
+      <LogBody showNames={showNames} {...props} />
     </BottomSheet>
   )
 }
